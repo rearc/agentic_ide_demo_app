@@ -1,0 +1,4 @@
+{
+  "mcpAllowlist": ["coin-flip-mcp:*"],
+  "terminalAllowlist": ["ls"]
+}
