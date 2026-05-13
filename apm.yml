@@ -1,0 +1,17 @@
+name: cursor-workshop-demo-app
+version: 0.0.1
+description: |
+  Multi-card React + Flask dashboard used as the Rearc workshop demo app.
+  Agentic primitives (agents, instructions, skills, hooks, MCP servers) are
+  provided by rearc/workshop-demo-kit, deployed via `apm install`.
+
+  This branch (claude-copilot-ready) replaces the cursor-specific .cursor/
+  layer that lives on main with APM-deployed primitives that work for
+  Claude Code, GitHub Copilot, and Cursor uniformly.
+
+dependencies:
+  apm:
+    # Local-path dep against the sibling ai-toolkit monorepo. Pre-publish
+    # form; once rearc/workshop-demo-kit is published, switch to:
+    #   - rearc/workshop-demo-kit
+    - ../ai-toolkit/packages/rearc-workshop-demo-kit

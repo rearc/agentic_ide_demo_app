@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh"
+          }
+        ],
+        "_apm_source": "rearc-workshop-demo-kit"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh"
+          }
+        ],
+        "_apm_source": "rearc-workshop-demo-kit"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh"
+          }
+        ],
+        "_apm_source": "rearc-workshop-demo-kit"
+      }
+    ]
+  }
+}

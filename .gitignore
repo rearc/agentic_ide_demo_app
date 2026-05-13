@@ -14,10 +14,13 @@ frontend/dist/
 .env
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/mcp.json
 .idea/
 
 # OS
 .DS_Store
 
-#
+# APM dependencies are intentionally committed on this branch (claude-copilot-ready)
+# so workshop participants get a pre-installed, ready-to-demo experience.
+# Re-run `apm install` to regenerate from apm.yml + apm.lock.yaml if needed.

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/audit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

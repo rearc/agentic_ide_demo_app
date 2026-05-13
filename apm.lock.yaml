@@ -1,0 +1,137 @@
+lockfile_version: '1'
+generated_at: '2026-05-13T00:16:00.437553+00:00'
+apm_version: 0.11.0
+dependencies:
+- repo_url: _local/rearc-workshop-demo-kit
+  package_type: apm_package
+  deployed_files:
+  - .claude/agents/code-reviewer.md
+  - .claude/agents/research-assistant.md
+  - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh
+  - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh
+  - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh
+  - .claude/rules/api-conventions.md
+  - .claude/rules/migrations.md
+  - .claude/rules/security-review.md
+  - .claude/rules/tailwind.md
+  - .claude/skills/add-dashboard-card
+  - .claude/skills/coin-flip
+  - .claude/skills/coin-flip-code
+  - .claude/skills/coin-flip-true-random
+  - .claude/skills/commit-message
+  - .claude/skills/flip-until-heads
+  - .github/agents/code-reviewer.agent.md
+  - .github/agents/research-assistant.agent.md
+  - .github/hooks/rearc-workshop-demo-kit-audit.json
+  - .github/hooks/rearc-workshop-demo-kit-lint.json
+  - .github/hooks/rearc-workshop-demo-kit-safety.json
+  - .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/audit.sh
+  - .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh
+  - .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh
+  - .github/instructions/api-conventions.instructions.md
+  - .github/instructions/migrations.instructions.md
+  - .github/instructions/security-review.instructions.md
+  - .github/instructions/tailwind.instructions.md
+  - .github/skills/add-dashboard-card
+  - .github/skills/coin-flip
+  - .github/skills/coin-flip-code
+  - .github/skills/coin-flip-true-random
+  - .github/skills/commit-message
+  - .github/skills/flip-until-heads
+  deployed_file_hashes:
+    .claude/agents/code-reviewer.md: sha256:b18f0978e7700a67608a4bb4c715461b8a76a09a15344fad2e3c1da6c5cc4f47
+    .claude/agents/research-assistant.md: sha256:550a02be69174736cd30703c91871a927d463d4ac55ce688237fc2083df90dde
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:9c449831ede968edba1422bae852a9a3dfde08b115c8e1c38d701999d08f03c3
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:5a44a95170dcec611aa330de482c1d896814f4732bda53a60fe646309f8d3a9f
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:8b09095b2ee0435e77cecae5f6c272e551059a521957c02220bd2676ff3653ae
+    .claude/rules/api-conventions.md: sha256:80e680013780417760b175e2f265b6eeda958b39115e665663855d3c5572f943
+    .claude/rules/migrations.md: sha256:faab1bed2a78e46b506a4b1b410d64350af451f33035aaa6337805e04e345594
+    .claude/rules/security-review.md: sha256:3d849f5416e4dc23d0b8ce0eab0b9b4edb9923725ca0a2035f4cc73ebcf05058
+    .claude/rules/tailwind.md: sha256:289b3d950d2c9cd46b1b67551d257cffd57fa62029a708d3eda812b1fcd1b1ba
+    .github/agents/code-reviewer.agent.md: sha256:b18f0978e7700a67608a4bb4c715461b8a76a09a15344fad2e3c1da6c5cc4f47
+    .github/agents/research-assistant.agent.md: sha256:550a02be69174736cd30703c91871a927d463d4ac55ce688237fc2083df90dde
+    .github/hooks/rearc-workshop-demo-kit-audit.json: sha256:7e35027d6ebfda4023895fbe2062abb378d8665de21af55e1c1d9e8c227226a5
+    .github/hooks/rearc-workshop-demo-kit-lint.json: sha256:ce1ac84abf565f054ad880ef853f34770c2c2b164aa65d38adea510aafbef336
+    .github/hooks/rearc-workshop-demo-kit-safety.json: sha256:2ed9d2d9eed0c9602950bdad3fef0a76ee7e8a748c7c9ea6575201d78a239e62
+    .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:9c449831ede968edba1422bae852a9a3dfde08b115c8e1c38d701999d08f03c3
+    .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:5a44a95170dcec611aa330de482c1d896814f4732bda53a60fe646309f8d3a9f
+    .github/hooks/scripts/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:8b09095b2ee0435e77cecae5f6c272e551059a521957c02220bd2676ff3653ae
+    .github/instructions/api-conventions.instructions.md: sha256:9a7780c781800b6a7a4e0bef3d45c43ef85472c075de9f5b911bd7dade49076d
+    .github/instructions/migrations.instructions.md: sha256:c7ad6a557f1687d86a8780b0907b65bbd5c5146f811ba7d5d7726639ba24cda0
+    .github/instructions/security-review.instructions.md: sha256:4c129ce1ef7e0203dd966482fd2b8618f688074ff17a1a99810534dfadaba805
+    .github/instructions/tailwind.instructions.md: sha256:91cc7bfdc5cc6ca4dc59b2534595db30813c0479e5aa8532ad4425bd94072008
+  source: local
+  local_path: ../ai-toolkit/packages/rearc-workshop-demo-kit
+- repo_url: anthropics/skills
+  host: github.com
+  resolved_commit: f458cee31a7577a47ba0c9a101976fa599385174
+  virtual_path: skills/frontend-design
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/rearc-workshop-demo-kit
+  package_type: claude_skill
+  deployed_files:
+  - .claude/skills/frontend-design
+  - .github/skills/frontend-design
+  content_hash: sha256:063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67
+- repo_url: mattpocock/skills
+  host: github.com
+  resolved_commit: f304057d61d3df3c9fd992ac2b6e3833cb9325fb
+  virtual_path: skills/engineering/to-prd
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/rearc-workshop-demo-kit
+  package_type: claude_skill
+  deployed_files:
+  - .claude/skills/to-prd
+  - .github/skills/to-prd
+  content_hash: sha256:6d741474efd4bc3db55fabc2722ed78ca9c374cabcb6212936d79d4fd4a30fcb
+- repo_url: mattpocock/skills
+  host: github.com
+  resolved_commit: f304057d61d3df3c9fd992ac2b6e3833cb9325fb
+  virtual_path: skills/productivity/grill-me
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/rearc-workshop-demo-kit
+  package_type: claude_skill
+  deployed_files:
+  - .claude/skills/grill-me
+  - .github/skills/grill-me
+  content_hash: sha256:784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea
+- repo_url: vercel-labs/agent-skills
+  host: github.com
+  resolved_commit: b9c8ee0643d87d3c5a953d1e22382ff2ead39229
+  virtual_path: skills/react-best-practices
+  is_virtual: true
+  depth: 2
+  resolved_by: _local/rearc-workshop-demo-kit
+  package_type: claude_skill
+  deployed_files:
+  - .claude/skills/react-best-practices
+  - .github/skills/react-best-practices
+  content_hash: sha256:74f142d28d360d78e8bac4f239a84c87f0ced9015729bc72b5458d82ff45b015
+mcp_servers:
+- clickup
+- coin-flip-mcp
+- context7
+mcp_configs:
+  clickup:
+    name: clickup
+    transport: http
+    registry: false
+    url: https://mcp.clickup.com/mcp
+  coin-flip-mcp:
+    name: coin-flip-mcp
+    transport: stdio
+    args:
+    - run
+    - --with
+    - mcp[cli]
+    - mcp-servers/coin-flip-mcp/server.py
+    registry: false
+    command: uv
+  context7:
+    name: context7
+    transport: http
+    registry: false
+    url: https://mcp.context7.com/mcp
