@@ -1,4 +1,4 @@
-# Architecture Decision Records — cursor_workshop_demo_app
+# Architecture Decision Records — agentic_ide_demo_app
 
 Architectural decisions for the multi-card personal dashboard. Captures the "why" behind choices that cannot be inferred from the code alone.
 

@@ -1,4 +1,4 @@
-# Architecture Decision Records — cursor_workshop_demo_app
+# Architecture Decision Records — agentic_ide_demo_app
 
 This document captures the key architectural decisions made during the development of the multi-card personal dashboard application. These decisions reflect the "why" behind the codebase — context that cannot be inferred from the code alone. This app was built as a teaching exhibit for a workshop on prompt engineering and agentic IDE workflows, and many decisions were shaped by that context.
 

@@ -1,6 +1,6 @@
 # Bootstrap Prompt for Demo App
 
-> **Instructions:** Copy everything below the line into a fresh Claude Code session opened in this repo (`~/code/cursor_workshop_demo_app/`). This prompt contains all the context needed to build the app from scratch.
+> **Instructions:** Copy everything below the line into a fresh Claude Code session opened in this repo (`~/code/agentic_ide_demo_app/`). This prompt contains all the context needed to build the app from scratch.
 
 ---
 
@@ -36,7 +36,7 @@ A **multi-card dashboard** with a React frontend and Flask API backend. The dash
 ### App Structure
 
 ```
-cursor_workshop_demo_app/
+agentic_ide_demo_app/
   backend/
     app/
       __init__.py            # Flask app factory

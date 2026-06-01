@@ -1,4 +1,4 @@
-name: cursor-workshop-demo-app
+name: agentic-ide-demo-app
 version: 0.0.1
 description: |
   Multi-card React + Flask dashboard used as the Rearc workshop demo app.

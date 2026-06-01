@@ -1,4 +1,4 @@
-# Agent instructions — cursor_workshop_demo_app
+# Agent instructions — agentic_ide_demo_app
 
 **Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree (see [Known inconsistencies](#known-inconsistencies)).
 
