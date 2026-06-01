@@ -259,3 +259,21 @@ Needed a way to populate initial card data. Built under time constraints.
 - Reproducible starting state for workshops — every attendee gets the same data
 - Destructive to any user customizations (cards, todos, layout arrangements)
 - Future improvement: upsert-based seed that preserves existing data
+
+---
+
+## ADR-015: Repo Rename from cursor_workshop_demo_app to agentic_ide_demo_app
+
+**Date:** May 2026
+**Status:** Accepted
+
+### Context
+Originally built as a Cursor-only workshop canvas. With Claude Code and Copilot variants of the workshop now in scope (and an APM-deployed primitive layer on the `claude-copilot-ready` branch that fans out across all three IDEs), the cursor-specific name no longer matches the repo's purpose.
+
+### Decision
+Rename GitHub repo `rearc/cursor_demo_mission_control_app` → `rearc/agentic_ide_demo_app`, local dir `cursor_workshop_demo_app/` → `agentic_ide_demo_app/`, and update in-repo content references (`apm.yml` name, `AGENTS.md` heading, `BOOTSTRAP_PROMPT.md` paths, ADR headings). `main` branch content stays unchanged (it is intentionally the cursor variant); the `claude-copilot-ready` branch holds the rename and the APM migration.
+
+### Consequences
+- GitHub redirect preserves old URLs for any existing references.
+- Local Claude Code state at `~/.claude/projects/-Users-admin-code-cursor-workshop-demo-app/` migrated to the new encoded path to preserve auto-memory entries (no chat sessions existed for this project, so no `.jsonl` rewriting was needed).
+- `ai-toolkit/` references to the old name are deferred — they will be cleaned up in a separate pass.
