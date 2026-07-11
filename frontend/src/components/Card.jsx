@@ -34,31 +34,50 @@ export default function Card({ card, locked }) {
   }, [card.source, entry.needsData, configKey])
 
   const CardContent = entry.component
-  const accentColor = `var(--color-${entry.accent})`
+  const accent = `var(--color-${entry.accent})`
+  const accent2 = `var(--color-${entry.accent}-2, ${accent})`
 
   return (
     <div
-      className={`group relative h-full bg-surface-raised border border-border-subtle overflow-hidden transition-all duration-300 hover:bg-surface-hover hover:border-transparent hover:shadow-lg ${!locked ? 'ring-1 ring-card-placeholder/20' : ''}`}
-      style={{ '--glow': accentColor }}
+      className="group relative h-full rounded-2xl bg-surface-raised/90 border border-border-subtle overflow-hidden transition-all duration-300 hover:border-transparent hover:-translate-y-0.5"
+      style={{
+        '--a': accent,
+        '--b': accent2,
+        boxShadow: '0 1px 0 0 rgba(255,255,255,0.03) inset',
+      }}
     >
-      {/* Accent glow on left edge */}
+      {/* Top accent bar */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-0.5 transition-all duration-300 group-hover:w-1"
-        style={{ backgroundColor: accentColor }}
+        className="absolute inset-x-0 top-0 h-[3px] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: 'linear-gradient(90deg, var(--a), var(--b))' }}
       />
+      {/* Corner glow, intensifies on hover */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-8 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none"
-        style={{ background: `linear-gradient(to right, ${accentColor}15, transparent)` }}
+        className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-15 transition-opacity duration-300 group-hover:opacity-35"
+        style={{ background: 'radial-gradient(circle, var(--b), transparent 70%)' }}
+      />
+      {/* Hover ring glow */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ boxShadow: '0 0 0 1px color-mix(in oklab, var(--a) 40%, transparent), 0 18px 40px -20px color-mix(in oklab, var(--b) 55%, transparent)' }}
       />
 
-      <div className="p-5 pl-4 h-full flex flex-col">
-        <div className={`flex items-center gap-3 mb-3 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}>
-          <span className="text-xl">{card.icon}</span>
+      <div className="relative p-5 h-full flex flex-col">
+        <div className={`flex items-center gap-3 mb-4 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}>
+          <span
+            className="grid place-items-center h-9 w-9 shrink-0 rounded-xl text-lg ring-1"
+            style={{
+              background: 'linear-gradient(135deg, color-mix(in oklab, var(--a) 22%, transparent), color-mix(in oklab, var(--b) 14%, transparent))',
+              '--tw-ring-color': 'color-mix(in oklab, var(--a) 30%, transparent)',
+            }}
+          >
+            {card.icon}
+          </span>
           <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-semibold text-text-primary leading-tight">
+            <h2 className="text-[15px] font-bold text-text-primary leading-tight truncate">
               {card.title}
             </h2>
-            <p className="text-xs text-text-muted mt-0.5">{card.description}</p>
+            <p className="text-xs text-text-muted mt-0.5 truncate">{card.description}</p>
           </div>
           {!locked && (
             <span className="text-text-muted text-xs select-none" title="Drag to move">
@@ -66,7 +85,7 @@ export default function Card({ card, locked }) {
             </span>
           )}
         </div>
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto card-scroll">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="flex gap-1.5">

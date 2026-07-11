@@ -134,7 +134,7 @@ export default function TodoCard({ card }) {
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-card-todo/20 px-3 py-1.5 text-xs font-medium text-card-todo hover:bg-card-todo/30 transition-colors"
+          className="shrink-0 rounded-lg px-4 py-1.5 text-xs font-bold text-surface bg-gradient-to-r from-card-todo to-card-todo-2 hover:opacity-90 transition-opacity"
         >
           Add
         </button>

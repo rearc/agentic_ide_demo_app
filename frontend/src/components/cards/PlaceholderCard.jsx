@@ -1,11 +1,22 @@
 export default function PlaceholderCard() {
   return (
-    <div className="border border-dashed border-border-subtle rounded-sm p-8 text-center">
-      <p className="text-2xl mb-3 opacity-60">✨</p>
-      <p className="text-text-secondary text-sm font-medium">
+    <div
+      className="h-full flex flex-col items-center justify-center text-center rounded-xl border border-dashed p-6"
+      style={{ borderColor: 'color-mix(in oklab, var(--a) 45%, transparent)' }}
+    >
+      <p className="text-4xl mb-3 animate-subtle-pulse">✨</p>
+      <p
+        className="text-base font-bold"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          color: 'transparent',
+        }}
+      >
         What should we build here?
       </p>
-      <p className="text-text-muted text-xs mt-1">This slot is waiting for a new widget</p>
+      <p className="text-text-muted text-xs mt-2">Pick a widget and we&apos;ll add it live</p>
     </div>
   )
 }

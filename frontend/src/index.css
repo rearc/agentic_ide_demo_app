@@ -1,48 +1,86 @@
 @import "tailwindcss";
 
-@theme {
-  --font-display: "Bricolage Grotesque", ui-serif, Georgia, serif;
+/* `static` forces every token to be emitted as a CSS variable on :root, even
+   ones only referenced via raw var() (the per-card --color-card-*-2 accents) and
+   not via a Tailwind utility class. Without it, v4 tree-shakes the unused ones
+   and gradients built from var(--color-card-*) silently resolve to nothing. */
+@theme static {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
 
-  --color-surface: #0f1219;
-  --color-surface-raised: #181d27;
-  --color-surface-hover: #1e2433;
-  --color-border-subtle: #252d3d;
+  --color-surface: #0b0e16;
+  --color-surface-raised: #141a26;
+  --color-surface-hover: #1a2130;
+  --color-border-subtle: #232c3d;
 
-  --color-text-primary: #e8ecf4;
-  --color-text-secondary: #8893a7;
-  --color-text-muted: #4d5768;
+  --color-text-primary: #f1f4fb;
+  --color-text-secondary: #9aa6bd;
+  --color-text-muted: #5a6478;
 
-  --color-card-weather: #f59e0b;
+  /* Per-card accent hues. Each card renders a gradient from its accent
+     toward a brighter partner hue for the bold/vibrant look. */
+  --color-card-weather: #fbbf24;
+  --color-card-weather-2: #fb7185;
   --color-card-quote: #f472b6;
+  --color-card-quote-2: #a78bfa;
   --color-card-space: #22d3ee;
+  --color-card-space-2: #6366f1;
   --color-card-placeholder: #818cf8;
-  --color-card-todo: #10b981;
+  --color-card-placeholder-2: #22d3ee;
+  --color-card-todo: #34d399;
+  --color-card-todo-2: #22d3ee;
+}
+
+html, body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--color-surface);
+  background:
+    radial-gradient(1100px 620px at 12% -8%, color-mix(in oklab, var(--color-card-quote) 16%, transparent), transparent 60%),
+    radial-gradient(1000px 560px at 92% 0%, color-mix(in oklab, var(--color-card-space) 14%, transparent), transparent 55%),
+    radial-gradient(900px 700px at 60% 110%, color-mix(in oklab, var(--color-card-placeholder) 12%, transparent), transparent 60%),
+    var(--color-surface);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Staggered card entrance — opacity only to avoid conflicting with
-   react-grid-layout's inline transform */
+/* Animated gradient wordmark */
+@keyframes hue-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--color-card-space),
+    var(--color-card-quote),
+    var(--color-card-placeholder),
+    var(--color-card-space)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hue-drift 12s ease-in-out infinite;
+}
+
+/* Staggered card entrance — opacity + slight rise. Transform is only used
+   before react-grid-layout takes over positioning (opacity keeps it safe). */
 @keyframes card-enter {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 .animate-card-enter {
-  animation: card-enter 0.4s ease-out both;
+  animation: card-enter 0.5s ease-out both;
 }
 
 /* Loading pulse */
 @keyframes subtle-pulse {
-  0%, 100% { opacity: 0.4; }
+  0%, 100% { opacity: 0.35; }
   50% { opacity: 1; }
 }
-
 .animate-subtle-pulse {
   animation: subtle-pulse 1.5s ease-in-out infinite;
 }
@@ -51,18 +89,20 @@ body {
 .react-grid-item {
   transition: all 200ms ease !important;
 }
-
 .react-grid-item > div {
   height: 100%;
 }
-
 .react-grid-placeholder {
   background: var(--color-card-placeholder) !important;
-  opacity: 0.08 !important;
-  border: 1px solid var(--color-card-placeholder) !important;
-  border-radius: 0 !important;
+  opacity: 0.12 !important;
+  border: 1px dashed var(--color-card-placeholder) !important;
+  border-radius: 1rem !important;
 }
-
 .react-resizable-handle::after {
   border-color: var(--color-text-muted) !important;
 }
+
+/* Thin scrollbars inside cards */
+.card-scroll { scrollbar-width: thin; scrollbar-color: var(--color-border-subtle) transparent; }
+.card-scroll::-webkit-scrollbar { width: 6px; }
+.card-scroll::-webkit-scrollbar-thumb { background: var(--color-border-subtle); border-radius: 999px; }

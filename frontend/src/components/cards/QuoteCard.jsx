@@ -1,11 +1,23 @@
 export default function QuoteCard({ data }) {
   if (!data) return null
   return (
-    <div className="py-1">
-      <blockquote className="text-[17px] italic text-text-primary/90 leading-relaxed font-light">
-        &ldquo;{data.text}&rdquo;
+    <div className="h-full flex flex-col justify-between">
+      <blockquote className="relative text-lg italic text-text-primary/90 leading-relaxed font-light pl-1">
+        <span
+          aria-hidden
+          className="absolute -left-1 -top-6 text-6xl leading-none font-serif opacity-40 select-none"
+          style={{
+            backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          &ldquo;
+        </span>
+        <span className="relative">{data.text}</span>
       </blockquote>
-      <p className="mt-4 text-xs text-text-muted tracking-wide uppercase">
+      <p className="mt-4 pt-3 border-t border-border-subtle/60 text-xs text-text-muted tracking-wide uppercase">
         {data.author}
         {data.fallback && (
           <span className="ml-2 normal-case tracking-normal opacity-50">(offline)</span>

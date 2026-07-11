@@ -12,17 +12,15 @@ function buildLayout(cards, locked) {
     y: card.layout?.y ?? Math.floor(i / 2) * 4,
     w: card.layout?.w ?? 6,
     h: card.layout?.h ?? 4,
-    minW: 3,
-    minH: 3,
-    static: locked,
+    minW: 2,
+    minH: 2,
   }))
 }
 
-export default function Dashboard() {
+export default function Dashboard({ locked }) {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [locked, setLocked] = useState(true)
   const hasUnlocked = useRef(false)
   const saveTimer = useRef(null)
   const { width, containerRef, mounted } = useContainerWidth()
@@ -33,6 +31,10 @@ export default function Dashboard() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!locked) hasUnlocked.current = true
+  }, [locked])
 
   const handleLayoutChange = useCallback((newLayout) => {
     if (locked || !hasUnlocked.current) return
@@ -86,34 +88,15 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => {
-            hasUnlocked.current = true
-            setLocked(l => !l)
-          }}
-          className={`text-xs px-3 py-1.5 border transition-colors ${
-            locked
-              ? 'border-border-subtle text-text-muted hover:text-text-secondary hover:border-text-muted'
-              : 'border-card-placeholder text-card-placeholder'
-          }`}
-        >
-          {locked ? 'Unlock layout' : 'Lock layout'}
-        </button>
-      </div>
       <div ref={containerRef}>
         {mounted && (
           <GridLayout
             width={width}
             layout={layout}
-            cols={12}
-            rowHeight={40}
-            isDraggable={!locked}
-            isResizable={!locked}
             onLayoutChange={handleLayoutChange}
-            draggableHandle=".card-drag-handle"
-            compactType="vertical"
-            margin={[16, 16]}
+            gridConfig={{ cols: 12, rowHeight: 40, margin: [16, 16] }}
+            dragConfig={{ enabled: !locked, handle: '.card-drag-handle' }}
+            resizeConfig={{ enabled: !locked }}
           >
             {cards.map((card, i) => (
               <div
