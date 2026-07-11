@@ -30,20 +30,19 @@ export default function App() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {!locked && (
-              <span className="hidden md:inline-flex items-center text-xs text-text-secondary bg-surface-raised/80 border border-border-subtle rounded-lg px-3 py-1.5">
+              <span className="hidden md:inline-flex items-center text-xs text-text-secondary bg-surface-raised/80 border border-border-subtle rounded-sm px-3 py-1.5">
                 Drag &amp; resize — changes save automatically
               </span>
             )}
             <button
               onClick={() => setLocked(l => !l)}
-              className={`inline-flex items-center gap-2 text-sm font-bold rounded-xl px-4 py-2.5 transition-all ${
+              className={`text-sm font-medium rounded-sm px-3.5 py-2 border transition-colors ${
                 locked
-                  ? 'text-surface bg-gradient-to-r from-card-placeholder to-card-space hover:opacity-90 shadow-lg shadow-card-space/20'
-                  : 'text-text-primary border border-card-placeholder/60 bg-card-placeholder/10 hover:bg-card-placeholder/20'
+                  ? 'border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-muted'
+                  : 'border-card-placeholder/60 text-card-placeholder hover:bg-card-placeholder/10'
               }`}
             >
-              <span>{locked ? '🔓' : '🔒'}</span>
-              {locked ? 'Customize layout' : 'Done — lock layout'}
+              {locked ? 'Customize layout' : 'Lock layout'}
             </button>
             <div className="text-right hidden sm:block">
               <p className="font-display text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-none">

@@ -130,11 +130,11 @@ export default function TodoCard({ card }) {
           onChange={e => setNewText(e.target.value)}
           placeholder="Add a task…"
           maxLength={500}
-          className="flex-1 min-w-0 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-card-todo/50"
+          className="flex-1 min-w-0 rounded-sm border border-border-subtle bg-surface px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-card-todo/50"
         />
         <button
           type="submit"
-          className="shrink-0 rounded-lg px-4 py-1.5 text-xs font-bold text-surface bg-gradient-to-r from-card-todo to-card-todo-2 hover:opacity-90 transition-opacity"
+          className="shrink-0 rounded-sm px-4 py-1.5 text-xs font-bold text-surface bg-gradient-to-r from-card-todo to-card-todo-2 hover:opacity-90 transition-opacity"
         >
           Add
         </button>
@@ -146,7 +146,7 @@ export default function TodoCard({ card }) {
           items.map(todo => (
             <li
               key={todo.id}
-              className="flex items-start gap-2 rounded-md border border-transparent px-1 py-0.5 hover:border-border-subtle/80 hover:bg-surface/50"
+              className="flex items-start gap-2 rounded-sm border border-transparent px-1 py-0.5 hover:border-border-subtle/80 hover:bg-surface/50"
             >
               <button
                 type="button"

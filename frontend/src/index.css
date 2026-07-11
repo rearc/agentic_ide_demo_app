@@ -96,7 +96,7 @@ body {
   background: var(--color-card-placeholder) !important;
   opacity: 0.12 !important;
   border: 1px dashed var(--color-card-placeholder) !important;
-  border-radius: 1rem !important;
+  border-radius: 0.125rem !important;
 }
 .react-resizable-handle::after {
   border-color: var(--color-text-muted) !important;

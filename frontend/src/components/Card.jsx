@@ -39,7 +39,7 @@ export default function Card({ card, locked }) {
 
   return (
     <div
-      className="group relative h-full rounded-2xl bg-surface-raised/90 border border-border-subtle overflow-hidden transition-all duration-300 hover:border-transparent hover:-translate-y-0.5"
+      className="group relative h-full rounded-sm bg-surface-raised/90 border border-border-subtle overflow-hidden transition-all duration-300 hover:border-transparent hover:-translate-y-0.5"
       style={{
         '--a': accent,
         '--b': accent2,
@@ -58,14 +58,14 @@ export default function Card({ card, locked }) {
       />
       {/* Hover ring glow */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 rounded-sm opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{ boxShadow: '0 0 0 1px color-mix(in oklab, var(--a) 40%, transparent), 0 18px 40px -20px color-mix(in oklab, var(--b) 55%, transparent)' }}
       />
 
       <div className="relative p-5 h-full flex flex-col">
         <div className={`flex items-center gap-3 mb-4 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}>
           <span
-            className="grid place-items-center h-9 w-9 shrink-0 rounded-xl text-lg ring-1"
+            className="grid place-items-center h-9 w-9 shrink-0 rounded-sm text-lg ring-1"
             style={{
               background: 'linear-gradient(135deg, color-mix(in oklab, var(--a) 22%, transparent), color-mix(in oklab, var(--b) 14%, transparent))',
               '--tw-ring-color': 'color-mix(in oklab, var(--a) 30%, transparent)',

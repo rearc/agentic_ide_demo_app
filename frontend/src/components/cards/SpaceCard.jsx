@@ -11,7 +11,7 @@ export default function SpaceCard({ data }) {
   return (
     <div className="space-y-3">
       {data.url && data.media_type === 'image' ? (
-        <div className="relative overflow-hidden rounded-xl ring-1 ring-white/10">
+        <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10">
           <img
             src={data.url}
             alt={data.title}
@@ -24,7 +24,7 @@ export default function SpaceCard({ data }) {
           href={data.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 py-10 bg-surface rounded-xl text-card-space hover:text-card-space/80 transition-colors ring-1 ring-white/5"
+          className="flex items-center justify-center gap-2 py-10 bg-surface rounded-sm text-card-space hover:text-card-space/80 transition-colors ring-1 ring-white/5"
         >
           <span>▶</span> Watch today&apos;s space video
         </a>
