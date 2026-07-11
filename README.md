@@ -4,9 +4,10 @@ A widget dashboard with a React frontend and Flask API backend. Displays data ca
 
 ## Prerequisites
 
-- Python 3.11+ (3.13 recommended)
-- Node.js 18+
-- npm 9+
+- **Python 3.11+** — required (the backend uses `datetime.UTC`, added in 3.11). A bare `python3` on macOS is often the system 3.9 or a conda `base` 3.10, which will fail only later at `db upgrade`. Build the venv with an explicit 3.11+ interpreter (see Backend below).
+- **Node.js 22** (Active LTS) — pinned in `frontend/.nvmrc`. Node 20 is end-of-life; use [nvm](https://github.com/nvm-sh/nvm) to match.
+- **npm 9+**
+- **[uv](https://github.com/astral-sh/uv)** — only needed for the coin-flip MCP server, not for running the app.
 
 ## Environment Variables
 
@@ -16,8 +17,8 @@ Copy `.env.example` to `.env` in the project root:
 cp .env.example .env
 ```
 
-- **FLASK_SECRET_KEY** — Required. Set to any secret string.
-- **NASA_API_KEY** — Optional. Free at [api.nasa.gov](https://api.nasa.gov/) (works without a key using DEMO_KEY, but with stricter rate limits)
+- **FLASK_SECRET_KEY** — Optional. `backend/config.py` falls back to a dev default if unset, so the app boots without it. Set it for anything beyond local dev.
+- **NASA_API_KEY** — Optional. Free at [api.nasa.gov](https://api.nasa.gov/) (works without a key using DEMO_KEY, but with stricter rate limits).
 
 Weather data uses Open-Meteo (no key required). All cards render with graceful fallbacks when APIs are unreachable.
 
@@ -25,10 +26,13 @@ Weather data uses Open-Meteo (no key required). All cards render with graceful f
 
 ### Backend
 
+Create the venv with an explicit 3.11+ interpreter (do **not** rely on a bare `python3` — see Prerequisites):
+
 ```bash
 cd backend
-python3 -m venv venv
+python3.11 -m venv venv        # or python3.13 / any 3.11+
 source venv/bin/activate
+python --version               # sanity check: should be 3.11+
 pip install -r requirements.txt
 ```
 
@@ -36,7 +40,8 @@ Initialize the database:
 
 ```bash
 flask --app run.py db upgrade
-python seed.py
+python seed.py                 # WARNING: destructive — wipes and re-seeds the cards
+                               # and todos tables. Any card added at runtime is lost.
 ```
 
 Start the dev server:
@@ -51,9 +56,12 @@ The API runs at `http://127.0.0.1:5001`.
 
 ```bash
 cd frontend
+nvm use                        # switches to the Node version in .nvmrc (22); `nvm install` first time
 npm install
 npm run dev
 ```
+
+If a fresh `npm install` reports advisories, run `npm audit fix` (never `--force`, which bumps majors and can break the build).
 
 The app runs at `http://localhost:5173` and proxies API requests to the Flask backend.
 
@@ -61,16 +69,19 @@ The app runs at `http://localhost:5173` and proxies API requests to the Flask ba
 
 ### Coin Flip
 
-A minimal [FastMCP](https://github.com/modelcontextprotocol/python-sdk) server that exposes a `flip_coin` tool. To set it up:
+A minimal [FastMCP](https://github.com/modelcontextprotocol/python-sdk) server that exposes a `flip_coin` tool. Its source lives in `mcp-servers/coin-flip-mcp/server.py`.
 
-```bash
-cd mcp-servers/coin-flip
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+The server is configured in `.vscode/mcp.json` (there is no root `.mcp.json` on this branch) and is launched automatically via stdio with `uv`:
+
+```json
+"coin-flip-mcp": {
+  "type": "stdio",
+  "command": "uv",
+  "args": ["run", "--with", "mcp[cli]", "mcp-servers/coin-flip-mcp/server.py"]
+}
 ```
 
-The server is configured in `.cursor/mcp.json` and Cursor will launch it automatically via stdio.
+`uv` must be on your PATH; it resolves dependencies (`mcp[cli]`) on first run, so no manual venv/pip step is needed.
 
 ## Project Structure
 

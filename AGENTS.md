@@ -33,21 +33,23 @@ A **multi-card dashboard**: a React SPA lists **cards** from the backend; each c
 
 Run **two processes** (from separate terminals).
 
-**Backend** (working directory `backend/`):
+**Backend** (working directory `backend/`). Requires **Python 3.11+** (`app/models/*.py` use `datetime.UTC`, added in 3.11); build the venv with an explicit interpreter — a bare `python3` is often macOS system 3.9 or conda `base` 3.10 and fails only later at `db upgrade`:
 
 ```bash
-python3.13 -m venv venv
+python3.11 -m venv venv           # or python3.13; not a bare `python3`
 source venv/bin/activate
+python --version                  # confirm 3.11+
 pip install -r requirements.txt
 flask --app run.py db upgrade
-python seed.py
+python seed.py                    # destructive: wipes + re-seeds cards/todos
 python run.py
 ```
 
-**Frontend** (working directory `frontend/`):
+**Frontend** (working directory `frontend/`). Node version is pinned in `.nvmrc` (22; Node 20 is EOL):
 
 ```bash
-npm install
+nvm use                           # or `nvm install` first time
+npm install                       # if advisories appear, `npm audit fix` (never --force)
 npm run dev
 ```
 
@@ -104,10 +106,9 @@ npm run dev
 
 ## MCP servers
 
-This repo connects to external services via the Model Context Protocol. MCP configs live in two places:
+This repo connects to external services via the Model Context Protocol. On this branch (`claude-copilot-ready`) MCP config lives in **one** place:
 
-- **`.mcp.json`** (repo root) -- read by Claude Code. Contains the ClickUp MCP server.
-- **`.cursor/mcp.json`** -- read by Cursor. Contains the ClickUp MCP server, Context7 (documentation lookup), and a project-local coin-flip demo server.
+- **`.vscode/mcp.json`** -- read by VS Code (and picked up by Claude Code / Copilot running in it). Contains ClickUp (project management), Context7 (documentation lookup), and a project-local coin-flip demo server (stdio via `uv`). There is **no root `.mcp.json`** and **no `.cursor/mcp.json`** on this branch.
 
 ### ClickUp (project management)
 
@@ -124,4 +125,4 @@ The `docs/standards/` directory contains team policy documents that AI agents re
 
 ## Known inconsistencies
 
-- **`README.md`** says the API runs on port **5000**, but **`backend/run.py`** and **`frontend/vite.config.js`** use **5001**. Trust those files and the [Ports and proxy](#local-development) section here.
+- **Port:** `README.md`, `backend/run.py`, and `frontend/vite.config.js` all agree on **5001**. (Earlier revisions of the README said 5000; that has been corrected.)
