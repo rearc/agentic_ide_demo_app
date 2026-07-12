@@ -113,9 +113,12 @@ Cheapest → most work: **static → data → stateful**; only a stateful card n
 
 ## MCP servers
 
-This repo connects to external services via the Model Context Protocol. On this branch (`claude-copilot-ready`) MCP config lives in **one** place:
+This repo connects to external services via the Model Context Protocol. Config lives in **two** files, kept in sync (dual-harness):
 
-- **`.vscode/mcp.json`** -- read by VS Code (and picked up by Claude Code / Copilot running in it). Contains ClickUp (project management), Context7 (documentation lookup), and a project-local coin-flip demo server (stdio via `uv`). There is **no root `.mcp.json`** and **no `.cursor/mcp.json`** on this branch.
+- **`.mcp.json`** (repo root) -- **read by Claude Code** (both the CLI and the VS Code extension; Claude Code does **not** read `.vscode/mcp.json`). Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
+- **`.vscode/mcp.json`** -- read by **VS Code / GitHub Copilot** agent mode. Top-level key is **`servers`**.
+
+Both define the same three servers: ClickUp (project management), Context7 (documentation lookup), and a project-local coin-flip demo server (stdio via `uv`). There is **no `.cursor/mcp.json`** on this branch. **If you add or change a server, update both files.**
 
 ### ClickUp (project management)
 
