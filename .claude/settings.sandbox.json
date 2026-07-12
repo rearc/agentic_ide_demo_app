@@ -1,0 +1,9 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "filesystem": {
+      "allowWrite": ["."],
+      "denyRead": ["./secrets"]
+    }
+  }
+}
