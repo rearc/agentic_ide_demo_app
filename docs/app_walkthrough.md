@@ -1,0 +1,156 @@
+# App Walkthrough — a guided tour of the Dashboard
+
+> **What this is:** a presenter's script for explaining this app out loud while
+> opening the files it names, in order. It is a *human* tour of the codebase, not
+> agent instructions (that's `AGENTS.md`). Follow it top to bottom and the room
+> will understand the whole app — backend, frontend, and database — in about ten
+> minutes.
+
+---
+
+## Step 0 — Before you present (setup)
+
+Do this **off-stage, before the room is watching** — the first thing they should see is the app already running, not a terminal.
+
+1. **Follow the setup in [README.md](../README.md)** — backend venv with an explicit **Python 3.11+** interpreter + `pip install`, and frontend deps (`nvm use` → Node 22, then `npm install`).
+2. **Seed the database:** `cd backend && python seed.py` — the board should start with the **five seeded cards** (Weather · Daily Quote · Coming Soon · Space Photo · Todos).
+3. **Run both servers** in two terminals:
+   - Backend: `cd backend && python run.py` → `http://127.0.0.1:5001`
+   - Frontend: `cd frontend && npm run dev` → `http://localhost:5173`
+4. **Open `http://localhost:5173`** and leave it on screen.
+
+Now begin the tour **on the running app** — deliver "The point of the app" below with the live dashboard up, pointing at the real cards, before you open a single file.
+
+---
+
+## The point of the app
+
+*(Present this with the app open in the browser — point at the cards as you talk.)*
+
+It's a **personal dashboard you run locally and make your own** — a "control
+center." The board holds **cards**: some pull live data (weather, a daily quote,
+NASA's photo of the day), some are self-contained tools (a todo list), and one is
+an empty **"Coming Soon"** slot inviting the next one.
+
+The app is deliberately **small and conventional** — a Flask API, a React SPA, a
+SQLite file. That's the whole point: the interesting part isn't the framework, it's
+that **adding a feature here is a fixed, repeatable pattern** (see [The punchline](#the-punchline-adding-a-feature--adding-a-card)),
+which is exactly what makes it a good codebase to extend live with an agent.
+
+## Architecture at a glance
+
+> Show the diagram here: **[architecture.svg](architecture.svg)** (or `architecture.drawio.png`) — a high-level picture of the tiers below. Editable source: [architecture.drawio](architecture.drawio).
+
+```
+  Browser (localhost:5173)
+      │  React SPA — one page, a grid of cards
+      ▼
+  Vite dev server ──proxy /api──►  Flask API (127.0.0.1:5001)
+                                      │
+                    ┌─────────────────┼───────────────────┐
+                    ▼                 ▼                    ▼
+             /api/cards        /api/data/<source>     /api/todos
+            (card records)   (live data per source)  (todo items)
+                    │                 │                    │
+                    ▼                 ▼                    ▼
+              SQLite (app.db)   external APIs         SQLite (app.db)
+             via SQLAlchemy    (Open-Meteo, NASA…)   via SQLAlchemy
+```
+
+Two things to hold in your head:
+1. **A card record** (title, icon, where it sits on the grid) lives in the database.
+2. **A card's live data** is fetched separately, on demand, by *source*.
+
+---
+
+## The one flow that explains everything
+
+Walk this end-to-end once; it touches every layer. *"How does the Weather card get on screen?"*
+
+1. **Browser loads the SPA.** [frontend/src/main.jsx](../frontend/src/main.jsx) mounts [App.jsx](../frontend/src/App.jsx), which renders the header and [Dashboard.jsx](../frontend/src/components/Dashboard.jsx).
+2. **Dashboard asks for the cards.** It calls `fetchCards()` in [frontend/src/api.js](../frontend/src/api.js) → `GET /api/cards`.
+3. **Vite proxies `/api` to Flask.** See the proxy in [frontend/vite.config.js](../frontend/vite.config.js) (→ `127.0.0.1:5001`).
+4. **Flask returns the card records.** [backend/app/routes/cards.py](../backend/app/routes/cards.py) `list_cards()` reads active cards from SQLite, ordered by `position`.
+5. **Dashboard lays them out.** It builds a grid from each card's saved `layout` JSON and renders one [Card.jsx](../frontend/src/components/Card.jsx) per record.
+6. **Each Card picks its component.** `Card.jsx` looks up `card.source` in the **`CARD_REGISTRY`** to find which React component to render and whether it `needsData`.
+7. **Data cards fetch their data.** For Weather, `Card.jsx` calls `fetchCardData('weather', config)` → `GET /api/data/weather`.
+8. **Flask dispatches by source.** [backend/app/routes/data.py](../backend/app/routes/data.py) looks up `'weather'` in its **`SERVICES`** map and calls [backend/app/services/weather.py](../backend/app/services/weather.py), which calls the Open-Meteo API and returns clean JSON (with a graceful fallback if the API is down).
+9. **The card renders.** [frontend/src/components/cards/WeatherCard.jsx](../frontend/src/components/cards/WeatherCard.jsx) turns that JSON into the widget you see.
+
+That's the app. Everything below is just the detail of each stop.
+
+---
+
+## Frontend (open these in order)
+
+- **[frontend/src/main.jsx](../frontend/src/main.jsx)** — the entry point. Mounts `<App />`. One line to notice: `import './index.css'`.
+- **[frontend/src/App.jsx](../frontend/src/App.jsx)** — the shell: branded header (the animated Rearc AI Labs lockup + live clock + the Customize-layout toggle) and `<Dashboard/>`. Note the header owns the `locked` state and passes it down.
+- **[frontend/src/components/Dashboard.jsx](../frontend/src/components/Dashboard.jsx)** — fetches the card list, then renders a **draggable/resizable grid** (`react-grid-layout`). When you unlock and move a card, `handleLayoutChange` PUTs the new `layout` back to the API — that's why your arrangement persists.
+- **[frontend/src/components/Card.jsx](../frontend/src/components/Card.jsx)** — the heart of the frontend. The **`CARD_REGISTRY`** (top of the file) maps a `source` string → `{ component, accent, needsData }`. The generic `Card` wrapper handles the chrome (title, icon, loading/error), and only fetches data when `needsData` is true. **This registry is the extension point.**
+- **[frontend/src/components/cards/](../frontend/src/components/cards/)** — one component per card type. Open **WeatherCard.jsx** as the example (note the client-side °C/°F toggle — a widget with real state). Contrast with **PlaceholderCard.jsx** (pure static) and **TodoCard.jsx** (its own CRUD against `/api/todos`).
+- **[frontend/src/api.js](../frontend/src/api.js)** — the entire backend contract in one small file: `fetchCards`, `updateCard`, `fetchCardData`, and the todo calls. Good place to show *"the frontend only knows these endpoints."*
+- **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme` (surface colors, per-card accent hues). The `--color-card-*` tokens are how each card gets its accent.
+
+**The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
+- **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space)*
+- **Static card** (`needsData: false`) — fixed or purely client-side content, no backend at all. *(placeholder; a client-only timer or calculator would be this too)*
+- **Stateful card** (`needsData: false`) — owns **persisted data** via its own model, routes, and table, so it needs a **migration**. It talks to its own endpoint, not `/api/data`. *(todo)*
+
+That last distinction is the whole cost story of adding a card: static is cheapest, a data card adds one service, and only a **stateful** card pays for a database migration (see [the punchline](#the-punchline-adding-a-feature--adding-a-card)).
+
+---
+
+## Backend (open these in order)
+
+- **[backend/run.py](../backend/run.py)** — starts the dev server on **port 5001**. Tiny; it just builds the app and runs it.
+- **[backend/app/__init__.py](../backend/app/__init__.py)** — the **app factory**. Creates the Flask app, wires SQLAlchemy + Migrate + CORS, and registers three blueprints all under `/api`. This is the map of the backend.
+- **[backend/config.py](../backend/config.py)** — configuration: the SQLite URL (`app.db`) and env-driven secrets (loads the repo-root `.env`).
+- **[backend/app/routes/cards.py](../backend/app/routes/cards.py)** — CRUD for card *records* (`/api/cards`). Note `list_cards` filters `is_active` and orders by `position`; `update_card` (PUT) is what saves layout changes.
+- **[backend/app/routes/data.py](../backend/app/routes/data.py)** — the **`SERVICES` dispatch table**. `GET /api/data/<source>` looks up `<source>` and calls its handler. Adding a data source = adding one line here. (This is the backend twin of the frontend's `CARD_REGISTRY`.)
+- **[backend/app/services/weather.py](../backend/app/services/weather.py)** — a representative **service**: call an external API, return a flat dict, and **always** return a fallback dict on failure so a dead API never breaks the UI. `quotes.py` and `space.py` follow the same shape.
+- **[backend/app/routes/todos.py](../backend/app/routes/todos.py)** — a fuller CRUD example (the todo card is stateful), showing validation and status codes.
+
+**The key backend idea:** two registries mirror each other — **`CARD_REGISTRY`** (frontend: how to render a source) and **`SERVICES`** (backend: how to fetch a source).
+
+---
+
+## Database layer
+
+- **[backend/app/models/card.py](../backend/app/models/card.py)** — the `Card` model. Point out `config` and `layout` are **JSON columns** (flexible per-card settings and grid position), and `to_dict()` is exactly what the API returns.
+- **[backend/app/models/todo.py](../backend/app/models/todo.py)** — the `Todo` model, with a foreign key to `cards` (`ON DELETE CASCADE`) — deleting the todo card removes its items.
+- **[backend/migrations/versions/](../backend/migrations/versions/)** — the schema's history as **Alembic migrations**: initial cards table → add `layout` column → add todos table. Schema changes go through here, never `create_all()`.
+- **[backend/seed.py](../backend/seed.py)** — resets the board to the starting five cards. ⚠️ **Destructive:** it wipes the `cards` and `todos` tables first, so anything added at runtime is lost on re-seed.
+
+---
+
+## The punchline: adding a feature = adding a card
+
+Every card touches the **same predictable set of files**. This is the whole reason
+the app exists in this shape — the extension surface is identical every time, which
+is what makes it safe and fast to extend with an agent.
+
+| # | File | What you add |
+|---|------|--------------|
+| 1 | `backend/app/services/{slug}.py` | a `fetch()` that returns the card's data |
+| 2 | `backend/app/routes/data.py` | one line in `SERVICES` |
+| 3 | `frontend/src/components/cards/{Name}Card.jsx` | the display component |
+| 4 | `frontend/src/components/Card.jsx` | one line in `CARD_REGISTRY` |
+| 5 | `frontend/src/index.css` | an accent color token |
+| 6 | `backend/seed.py` | a seed row so it appears on the board |
+| 7 | *(only if stateful)* an Alembic migration | a new table/column |
+
+Steps 1–2 are **backend-only** and only needed for *data* cards; a self-contained
+card (like a timer or calculator) skips them and just does 3–6. This 7-touchpoint
+pattern is codified in the **`add-dashboard-card` skill**
+([.claude/skills/add-dashboard-card/SKILL.md](../.claude/skills/add-dashboard-card/SKILL.md)) —
+that's what an agent follows to build a card end-to-end.
+
+---
+
+## Presenter notes (say these if asked)
+
+- **Ports:** frontend `5173`, backend `5001`. The frontend proxies `/api` to the backend, so the browser only ever talks to `5173`.
+- **Two-kinds-of-cards** is the mental model that makes everything click — lead with it.
+- **`seed.py` is destructive** — don't run it mid-demo if you've added cards you want to keep.
+- **Graceful fallbacks:** every data service returns a fallback on failure, so a flaky conference network degrades a card instead of breaking the page.
+- **Where to start a live "add a card":** the empty **Coming Soon** card is the invitation — pick a new widget and walk the 7 touchpoints above.

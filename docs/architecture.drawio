@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="Architecture">
+    <mxGraphModel dx="900" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Dashboard — Architecture" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="A personal &quot;control center&quot; — a grid of cards. React SPA · Flask API · SQLite." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="46" width="600" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Tier 1: Browser -->
+        <mxCell id="b" value="Browser  —  http://localhost:5173" style="swimlane;startSize=30;html=1;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="880" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="spa" value="React SPA&#xa;&#xa;App → Dashboard → Card&#xa;( CARD_REGISTRY maps source → widget )" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="b">
+          <mxGeometry x="270" y="45" width="340" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Tier 2: Vite proxy -->
+        <mxCell id="vite" value="Vite dev server&#xa;proxies  /api  →  127.0.0.1:5001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="330" y="240" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Tier 3: Flask API -->
+        <mxCell id="api" value="Flask API  —  127.0.0.1:5001   ( app factory · blueprints under /api )" style="swimlane;startSize=40;html=1;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="880" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cards" value="/api/cards&#xa;&#xa;card records (CRUD)&#xa;list · create · update · delete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="api">
+          <mxGeometry x="40" y="60" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="todos" value="/api/todos&#xa;&#xa;todo items (CRUD)&#xa;the todo card's state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="api">
+          <mxGeometry x="320" y="60" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="data" value="/api/data/&lt;source&gt;&#xa;&#xa;SERVICES dispatch table&#xa;source → service.fetch()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" vertex="1" parent="api">
+          <mxGeometry x="600" y="60" width="240" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Tier 4: Data + External -->
+        <mxCell id="db" value="SQLite  —  app.db&#xa;&#xa;SQLAlchemy models:&#xa;Card · Todo&#xa;(schema via Alembic migrations)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="150" y="620" width="260" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ext" value="External APIs&#xa;&#xa;Open-Meteo (weather)&#xa;NASA APOD (space)&#xa;ZenQuotes (quote)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="600" y="630" width="280" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" value="fetch  /api/*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="spa" target="vite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="proxy → Flask :5001" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="vite" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="read / write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="cards" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="read / write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="todos" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="fetch live data&#xa;(with fallback)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="data" target="ext">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;verticalAlign=top;fontStyle=1;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="790" width="880" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1" value="" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="legend">
+          <mxGeometry x="20" y="30" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1t" value="Client (browser / SPA)" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="legend">
+          <mxGeometry x="52" y="28" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2" value="" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="legend">
+          <mxGeometry x="250" y="30" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2t" value="Proxy &amp; Flask API" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="legend">
+          <mxGeometry x="282" y="28" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3" value="" style="rounded=0;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="legend">
+          <mxGeometry x="450" y="30" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3t" value="Database (SQLite)" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="legend">
+          <mxGeometry x="482" y="28" width="160" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg4" value="" style="rounded=0;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="legend">
+          <mxGeometry x="650" y="30" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="lg4t" value="External APIs" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="legend">
+          <mxGeometry x="682" y="28" width="160" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
