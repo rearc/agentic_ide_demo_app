@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./secrets/**)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
