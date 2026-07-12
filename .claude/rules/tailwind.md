@@ -1,3 +1,9 @@
+---
+paths:
+  - "frontend/**/*.jsx"
+  - "frontend/**/*.tsx"
+---
+
 # Tailwind CSS Only
 
 All styling in React components must use Tailwind CSS utility classes. No other styling approaches are permitted.
