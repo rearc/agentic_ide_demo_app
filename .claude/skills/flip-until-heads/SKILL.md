@@ -1,6 +1,8 @@
 ---
 name: flip-until-heads
 description: Repeatedly invokes coin-flip-true-random until heads, reporting each flip and the total count; caps at 20 flips with a clear stop message.
+context: fork
+agent: general-purpose
 ---
 
 # Flip Until Heads
