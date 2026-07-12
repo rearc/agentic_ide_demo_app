@@ -5,9 +5,23 @@ description: Step-by-step workflow for adding a new dashboard card to this Flask
 
 # Add a Dashboard Card
 
-This skill walks through adding a new card type to this dashboard app. Every card has six touchpoints across the codebase. Work through them in order — each stage has a verification step so you catch problems early.
+This skill walks through adding a new card type to this dashboard app. Work through the stages in order — each has a verification step so you catch problems early.
 
 See `references/weather-card-example.md` for a complete, annotated example of an existing card's full file set.
+
+## Card archetypes — decide this first
+
+Every card is **one row in the `cards` table + one entry in `CARD_REGISTRY`**. Cards differ only in *where their data comes from*, and that decides how much backend work you do:
+
+| Archetype | `needsData` | Data source | Extra backend work |
+|-----------|-------------|-------------|--------------------|
+| **Data card** (weather, quote, space) | `true` | live fetch from `/api/data/<source>` via a backend service | Stages 1–2 (+3 if the API needs a key) |
+| **Static card** (placeholder; a client-only timer, calculator, clock) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
+| **Stateful card** (todo) | `false` | its **own** model, routes, and table — it talks to its own endpoint, **not** `/api/data` | a new SQLAlchemy model + routes blueprint + **an Alembic migration** (skip stages 1–3) |
+
+**All three** still do the frontend + seed stages (4 component, 5 `CARD_REGISTRY`, 6 accent color, 7 seed row). The difference is only what happens on the backend.
+
+Cost, cheapest → most work: **static → data → stateful.** Only a **stateful** card requires a **database migration** — that's the difficulty cliff, so prefer static or data cards unless the widget genuinely must persist its own data. The built-in `todo` card is the reference implementation of the stateful pattern (see `backend/app/models/todo.py`, `backend/app/routes/todos.py`, and its migration).
 
 ## Before you start
 

@@ -85,7 +85,14 @@ npm run dev
 
 ## How to add a new dashboard “card type”
 
-1. **Backend service:** Add `backend/app/services/<name>.py` with a `fetch(**kwargs)` (or compatible) function; handle failures with **graceful fallbacks** (pattern: `weather.py`, `quotes.py`, `space.py`).
+**First decide the archetype** — every card is one row in `cards` + one `CARD_REGISTRY` entry, differing only in where its data lives:
+- **Data card** (`needsData: true`) — live data via a backend service + `/api/data/<source>` (steps 1–2). *weather, quote, space.*
+- **Static card** (`needsData: false`) — content rendered entirely in the component; **skip steps 1–2 and 5**. *placeholder; a client-only timer/calculator.*
+- **Stateful card** (`needsData: false`) — owns its own model, routes, and table; skip the service (1–2) but **requires an Alembic migration** (step 5). *todo (`models/todo.py`, `routes/todos.py`).*
+
+Cheapest → most work: **static → data → stateful**; only a stateful card needs a migration.
+
+1. **Backend service:** *(data cards only)* Add `backend/app/services/<name>.py` with a `fetch(**kwargs)` (or compatible) function; handle failures with **graceful fallbacks** (pattern: `weather.py`, `quotes.py`, `space.py`).
 2. **Register source:** Add the source string to `SERVICES` in `backend/app/routes/data.py`.
 3. **Frontend widget:** Add `frontend/src/components/cards/<Name>Card.jsx` and wire it in `CARD_REGISTRY` in `Card.jsx` (set `needsData` and `accent` token to match a `--color-card-*` or extend `@theme`).
 4. **Data in DB:** Add a row via `POST /api/cards` or extend `backend/seed.py` and re-seed (seed **deletes all cards** first).
