@@ -1,6 +1,7 @@
 ---
 name: coin-flip-code
 description: Flips a coin by running a Python script that returns heads or tails.
+allowed-tools: Bash(python3 *)
 ---
 
 # Coin Flip (Script)

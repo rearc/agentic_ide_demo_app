@@ -1,6 +1,7 @@
 ---
 name: coin-flip
 description: Flips a coin and returns either heads or tails.
+model: sonnet
 ---
 
 # Coin Flip

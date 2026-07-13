@@ -1,11 +1,19 @@
 ---
 name: add-dashboard-card
 description: Step-by-step workflow for adding a new dashboard card to this Flask + React app, covering backend service, route wiring, database seeding, frontend component, card registry, and accent color.
+when_to_use: "Use when the user wants to add a new card, widget, or tile to the dashboard, or wire a new data source into the app."
+argument-hint: "[slug] [source]"
+arguments: [slug, source]
+effort: high
 ---
 
 # Add a Dashboard Card
 
 This skill walks through adding a new card type to this dashboard app. Work through the stages in order — each has a verification step so you catch problems early.
+
+## Arguments (if invoked with them)
+
+If this skill was invoked with arguments, use `$slug` as the card slug and `$source` as its data source, and skip the matching questions in **Before you start**. Full argument text: $ARGUMENTS. If no arguments were passed, gather the details below as normal.
 
 See `references/weather-card-example.md` for a complete, annotated example of an existing card's full file set.
 

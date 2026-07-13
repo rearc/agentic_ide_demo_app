@@ -1,11 +1,22 @@
 ---
 name: commit-message
 description: Helps craft a well-structured commit message from staged changes — inspects git diff, applies project conventions, asks about intent, and drafts subject + body before the user runs git commit.
+argument-hint: "[optional focus or verb]"
+disable-model-invocation: true
+allowed-tools: Bash(git diff *), Bash(git status *), Bash(git log *)
 ---
 
 # Commit message
 
 Use this skill when the user wants help writing a **commit message** for work they are about to commit (or have staged). Do **not** run `git commit` for them unless they explicitly ask; the default outcome is a **draft** they can paste after approval.
+
+## Staged changes at invocation (auto-injected)
+
+The staged diff below is inlined when this skill runs, so you start with the current staged state already in hand:
+
+!`git diff --staged --stat`
+
+If a focus or verb was passed as an argument, bias the subject toward it: $ARGUMENTS.
 
 ## Workflow
 
