@@ -7,7 +7,7 @@ A widget dashboard with a React frontend and Flask API backend. Displays data ca
 - **Python 3.11+** — required (the backend uses `datetime.UTC`, added in 3.11). A bare `python3` on macOS is often the system 3.9 or a conda `base` 3.10, which will fail only later at `db upgrade`. Build the venv with an explicit 3.11+ interpreter (see Backend below).
 - **Node.js 22** (Active LTS) — pinned in `frontend/.nvmrc`. Node 20 is end-of-life; use [nvm](https://github.com/nvm-sh/nvm) to match.
 - **npm 9+**
-- **[uv](https://github.com/astral-sh/uv)** — only needed for the coin-flip MCP server, not for running the app.
+- **[uv](https://github.com/astral-sh/uv)** — only needed for the random-tools MCP server, not for running the app.
 
 ## Environment Variables
 
@@ -67,17 +67,17 @@ The app runs at `http://localhost:5173` and proxies API requests to the Flask ba
 
 ## MCP Servers
 
-### Coin Flip
+### Random Tools
 
-A minimal [FastMCP](https://github.com/modelcontextprotocol/python-sdk) server that exposes a `flip_coin` tool. Its source lives in `mcp-servers/coin-flip-mcp/server.py`.
+A minimal [FastMCP](https://github.com/modelcontextprotocol/python-sdk) server exposing two random-number tools: `coin_flip` (returns heads/tails) and `roll_die` (rolls an N-sided die — takes a `sides` parameter, default 6). Its source lives in `mcp-servers/random-tools-mcp/server.py`.
 
-The server is configured in `.vscode/mcp.json` (there is no root `.mcp.json` on this branch) and is launched automatically via stdio with `uv`:
+The server is configured in `.mcp.json` (read by Claude Code) and `.vscode/mcp.json` (read by VS Code / Copilot), kept in sync, and launched automatically via stdio with `uv`:
 
 ```json
-"coin-flip-mcp": {
+"random-tools": {
   "type": "stdio",
   "command": "uv",
-  "args": ["run", "--with", "mcp[cli]", "mcp-servers/coin-flip-mcp/server.py"]
+  "args": ["run", "--with", "mcp[cli]", "mcp-servers/random-tools-mcp/server.py"]
 }
 ```
 

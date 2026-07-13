@@ -8,14 +8,14 @@
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
     },
-    "coin-flip-mcp": {
+    "random-tools": {
       "type": "stdio",
       "command": "uv",
       "args": [
         "run",
         "--with",
         "mcp[cli]",
-        "mcp-servers/coin-flip-mcp/server.py"
+        "mcp-servers/random-tools-mcp/server.py"
       ]
     }
   }

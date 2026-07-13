@@ -268,9 +268,9 @@ This repo has all three versions of a coin flip to illustrate the spectrum:
 ```json
 {
   "mcpServers": {
-    "coin-flip-mcp": {
+    "random-tools": {
       "command": "uv",
-      "args": ["run", "--with", "mcp[cli]", "mcp-servers/coin-flip/server.py"]
+      "args": ["run", "--with", "mcp[cli]", "mcp-servers/random-tools-mcp/server.py"]
     },
     "context7": {
       "url": "https://mcp.context7.com/mcp",
