@@ -2,7 +2,7 @@
 
 **Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree (see [Known inconsistencies](#known-inconsistencies)).
 
-`BOOTSTRAP_PROMPT.md` is listed in **`.cursorignore`**—the agent workspace typically **cannot read it**; do not assume its contents. Ignore it for policy and architecture decisions unless a human pastes relevant excerpts.
+**Enforceable conventions live in `.claude/rules/`, not here** — API response shapes (`api-conventions`), styling (`tailwind`, path-scoped to `frontend/**`), DB migrations (`migrations`, path-scoped to `backend/**`), and the security checklist (`security-review`). This file is **orientation, setup, and non-obvious gotchas**; the rules are the authority for conventions, so this file points to them rather than restating them.
 
 ## What this project is
 
@@ -68,20 +68,19 @@ npm run dev
 
 **Do not** commit real secrets. `.gitignore` and `.cursorignore` both exclude `.env`.
 
-## Backend architecture
+## Backend architecture (orientation — non-obvious bits only)
 
-- **App factory:** `backend/app/__init__.py` — registers blueprints under `/api`.
-- **Models:** `backend/app/models/card.py` — `Card` with `config` and `layout` JSON, ordering by `position`, `is_active` filter on list.
-- **Routes:**
-  - `backend/app/routes/cards.py` — CRUD under `/api/cards` (list filters `is_active=True`; `PUT` accepts `layout` among other fields).
-  - `backend/app/routes/data.py` — `/api/data/<source>` dispatches to service callables in `SERVICES`; query string args are passed as kwargs to the handler (e.g. weather `city`).
+- **App factory** `backend/app/__init__.py` registers blueprints under `/api`.
+- **`/api/data/<source>`** (`routes/data.py`) dispatches to service callables in the `SERVICES` map; query-string args pass through as **kwargs** (e.g. weather `city`). Services return **flat dicts with graceful fallbacks** (pattern: `services/weather.py`).
+- **`Card`** (`models/card.py`) carries `config`/`layout` JSON, orders by `position`; the list route filters `is_active`.
+- Response shapes + status codes are governed by **`.claude/rules/api-conventions`** (authority — not restated here).
 
-## Frontend architecture
+## Frontend architecture (orientation — non-obvious bits only)
 
-- **Card types:** `Card.jsx` uses `CARD_REGISTRY` keyed by `card.source`. Unknown sources fall back to the placeholder entry.
-- **Data loading:** For `needsData: true`, `fetchCardData(source, card.config)` builds query params from `config` and GETs `/api/data/<source>?...`.
-- **Styling:** Prefer **Tailwind utilities** in JSX. Design tokens live in `frontend/src/index.css` under `@theme` (e.g. `--color-card-weather`). Some **custom CSS** is intentional for animations and **react-grid-layout** overrides—do not assume “Tailwind only” with zero CSS file changes.
-- **Layout UX:** Dashboard starts **locked**; unlocking enables drag/resize; `onLayoutChange` debounces and `PUT`s `layout: { x, y, w, h }` per card.
+- **Card types:** `Card.jsx` uses `CARD_REGISTRY` keyed by `card.source`; unknown sources fall back to the placeholder entry.
+- **Data loading:** for `needsData: true`, `fetchCardData(source, card.config)` builds query params and GETs `/api/data/<source>`.
+- **Layout UX:** the dashboard starts **locked**; unlocking enables drag/resize; `onLayoutChange` debounces a `PUT` of `layout: { x, y, w, h }` per card.
+- Styling policy — Tailwind-first with narrow exceptions for dynamic CSS vars and `index.css` overrides — is governed by **`.claude/rules/tailwind`** (authority — not restated here).
 
 ## How to add a new dashboard “card type”
 
@@ -96,7 +95,7 @@ Cheapest → most work: **static → data → stateful**; only a stateful card n
 2. **Register source:** Add the source string to `SERVICES` in `backend/app/routes/data.py`.
 3. **Frontend widget:** Add `frontend/src/components/cards/<Name>Card.jsx` and wire it in `CARD_REGISTRY` in `Card.jsx` (set `needsData` and `accent` token to match a `--color-card-*` or extend `@theme`).
 4. **Data in DB:** Add a row via `POST /api/cards` or extend `backend/seed.py` and re-seed (seed **deletes all cards** first).
-5. **Schema changes:** If the model changes, add an Alembic migration under `backend/migrations/versions/` and run `flask --app run.py db upgrade`.
+5. **Schema changes:** If the model changes, add an Alembic migration and run `flask --app run.py db upgrade` (migration conventions: **`.claude/rules/migrations`**).
 
 ## External APIs (current implementations)
 
