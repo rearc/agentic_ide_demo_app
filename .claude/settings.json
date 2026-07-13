@@ -1,7 +1,8 @@
 {
   "permissions": {
     "deny": [
-      "Read(./secrets/**)"
+      "Read(./secrets/**)",
+      "Read(./docs/reference/claude_md_examples/**)"
     ]
   },
   "hooks": {
