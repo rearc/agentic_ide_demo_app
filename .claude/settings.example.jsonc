@@ -1,0 +1,142 @@
+// =============================================================================
+// settings.example.jsonc  —  A GUIDED TOUR of Claude Code settings
+// -----------------------------------------------------------------------------
+// This is a TEACHING CATALOG, not a live config. Claude Code does NOT load this
+// file (it only reads settings.json / settings.local.json). It exists so we can
+// walk through what's available and what each key does.
+//
+// ⚠️  IMPORTANT: real `.claude/settings.json` is STRICT JSON — it does NOT
+//     support `//` comments. The comments here are for humans only. To annotate
+//     a real settings file, use a `_comment` sibling key (Claude Code ignores
+//     unknown keys) or keep the notes in a separate doc.
+//
+// ⚠️  markers below = keys that CHANGE RUNTIME BEHAVIOR (would affect a live
+//     session). ✅ = cosmetic / safe. Verify exact keys+values against the live
+//     docs (code.claude.com/docs/en/settings.md) before relying on them.
+// =============================================================================
+{
+  // ---------------------------------------------------------------------------
+  // PERMISSIONS  ⚠️  — posture: what the agent may attempt. deny always wins.
+  // Rule form: Tool(pattern) — e.g. Bash(npm run *), Read(./src/**), Edit(./x),
+  // WebFetch(domain:*.github.com), mcp__server__tool, Agent(Explore).
+  // ---------------------------------------------------------------------------
+  "permissions": {
+    "allow": [                       // pre-approved — run without prompting
+      "Read(./**)",
+      "Bash(npm run *)",
+      "Bash(git status)",
+      "Bash(git log *)"
+    ],
+    "ask": [                         // always confirm before running
+      "Bash(git push *)",
+      "Write(./backend/migrations/**)"
+    ],
+    "deny": [                        // blocked outright (highest precedence)
+      "Read(./secrets/**)",
+      "Read(./.env)",
+      "Bash(git push --force *)"
+    ],
+    "additionalDirectories": [       // grant file access OUTSIDE the repo root
+      "~/shared-design-assets"
+    ]
+  },
+
+  // ---------------------------------------------------------------------------
+  // MCP SERVER CONTROL  ⚠️  (allow/deny lists — often managed org-wide)
+  // ---------------------------------------------------------------------------
+  "allowedMcpServers": [],           // ⚠️ if non-empty, ONLY these MCP servers load (whitelist). Empty = no restriction.
+  "deniedMcpServers": [],            // ⚠️ blocklist of MCP servers to refuse. e.g. [{"serverName":"filesystem"}]
+
+  // ---------------------------------------------------------------------------
+  // MEMORY & CONTEXT
+  // ---------------------------------------------------------------------------
+  "autoMemoryEnabled": true,         // ⚠️ Claude writes its own per-repo memory (MEMORY.md) as it learns
+  "autoMemoryDirectory": "~/.claude/projects",  // ✅ where auto-memory is stored (default shown)
+  "claudeMdExcludes": [              // ⚠️ glob patterns of CLAUDE.md / rules files to NOT auto-load
+    "**/vendor/**/CLAUDE.md"         //     (handy in monorepos where ancestor CLAUDE.md files are irrelevant)
+  ],
+  "autoCompactEnabled": true,        // ⚠️ auto-summarize the conversation when the context window fills
+
+  // ---------------------------------------------------------------------------
+  // AUTO MODE  ⚠️  — the classifier that auto-approves safe actions without prompts
+  // ---------------------------------------------------------------------------
+  "autoMode": {
+    // autoMode configures the classifier that auto-approves safe actions when auto mode is on.
+    // KEY IDEA: unlike permissions (exact Tool(pattern) matches), auto-mode allow/soft_deny/hard_deny
+    // accept PLAIN-ENGLISH PROSE — the classifier reads and applies these natural-language rules.
+    "environment": ["$defaults"],    // trusted-infra baseline
+    "soft_deny": [                   // ⚠️ prose the classifier leans toward blocking / prompting on
+      "Anything that deletes data, drops database tables, or wipes migrations",
+      "Editing deployment, CI/CD, or production config files"
+    ]
+  },
+  "disableAutoMode": "disable",      // ⚠️ (managed-only) org-wide kill switch for auto mode. Omit the key to allow it.
+
+  // ---------------------------------------------------------------------------
+  // HOOKS
+  // ---------------------------------------------------------------------------
+  "disableAllHooks": false,          // ⚠️ true = turn OFF every hook (would kill our guard-shell/audit/auto-lint demo!)
+
+  // ---------------------------------------------------------------------------
+  // MODEL / REASONING
+  // ---------------------------------------------------------------------------
+  "effortLevel": "medium",           // ⚠️ reasoning depth: low | medium | high | xhigh | max (speed vs quality)
+
+  // ---------------------------------------------------------------------------
+  // ENVIRONMENT  ⚠️  — env vars injected into every session/subprocess
+  // ---------------------------------------------------------------------------
+  "env": {
+    // ⚠️ affects tool execution. Common uses: telemetry/audit export, feature flags.
+    "EXAMPLE_VAR": "example-value"
+  },
+
+  // ---------------------------------------------------------------------------
+  // SKILL DISCOVERY
+  // ---------------------------------------------------------------------------
+  "skillListingBudgetFraction": 0.15, // ⚠️ fraction of context spent listing available skills to Claude.
+                                      //     Lower = cheaper but may hide skills from discovery.
+  "skillListingMaxDescChars": 500,    // ✅ max chars shown per skill description in the listing (display only)
+
+  // ---------------------------------------------------------------------------
+  // SHELL & PLANS
+  // ---------------------------------------------------------------------------
+  "defaultShell": "zsh",             // ⚠️ shell used for `!` passthrough commands: bash | zsh | fish | powershell
+  "plansDirectory": "~/.claude/plans", // ✅ where /plan output is saved
+
+  // ---------------------------------------------------------------------------
+  // HOUSEKEEPING
+  // ---------------------------------------------------------------------------
+  "cleanupPeriodDays": 365,          // ✅ days before old session files are deleted. Set HIGH so this repo's
+                                     //     workshop sessions aren't reaped (default is 30).
+  "feedbackSurveyRate": 0,           // ✅ probability (0–1) of a feedback survey. 0 = never bug attendees.
+  "companyAnnouncements": [          // ✅ messages shown at session start
+    "Welcome to the workshop!"
+  ],
+
+  // ---------------------------------------------------------------------------
+  // UI / COSMETIC  (✅ all safe — presentation only)
+  // ---------------------------------------------------------------------------
+  "theme": "auto",                   // ✅ color scheme: auto | light | dark
+  "language": "en",                  // ✅ UI language (en, es, fr, de, ja, ...)
+  "outputStyle": "auto",             // ✅ rendering: auto | fullscreen | classic. Requires restart to change.
+                                     //     Docs: https://code.claude.com/docs/en/fullscreen.md
+  "statusLine": {                    // ✅ custom status line = the rearc/base toolkit METER
+    "type": "command",               //     (context-window %, 5h/weekly rate-limit burn, session cost).
+    "command": ".claude/statusline.sh" //   Copy from ai-toolkit/packages/rearc-base/scripts/statusline.sh (needs jq).
+  },
+  "showThinkingSummaries": true,     // ✅ show Claude's thinking summaries (when extended thinking is on)
+  "showTurnDuration": true,          // ✅ show elapsed time per turn
+  "autoScrollEnabled": true,         // ✅ auto-scroll output in fullscreen mode
+  "spinnerTipsEnabled": true,        // ✅ show rotating tips while Claude works
+  "spinnerTipsOverride": [           // ✅ replace the default tips with your own
+    "Tip: /memory shows what Claude has loaded.",
+    "Tip: hooks enforce; rules only guide."
+  ],
+  "spinnerVerbs": [                  // ✅ the "Claude is ___..." words. Ours = workshop-flavored fun.
+    "vibing", "conjuring", "yak-shaving", "overthinking",
+    "summoning", "bikeshedding", "caffeinating"
+  ],
+  "askUserQuestionTimeout": "5m",    // ✅ how long a question dialog waits before auto-continuing
+  "verbose": false                   // ⚠️(mild) true = verbose logging (same as --verbose / CLAUDE_CODE_VERBOSE);
+                                     //     shows every tool call in full. Handy for the subagent-read-only proof.
+}
