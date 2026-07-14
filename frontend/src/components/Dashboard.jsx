@@ -28,7 +28,7 @@ export default function Dashboard({ locked }) {
   useEffect(() => {
     fetchCards()
       .then(setCards)
-      .catch(err => setError(err.message))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
 
@@ -36,31 +36,47 @@ export default function Dashboard({ locked }) {
     if (!locked) hasUnlocked.current = true
   }, [locked])
 
-  const handleLayoutChange = useCallback((newLayout) => {
-    if (locked || !hasUnlocked.current) return
+  const handleLayoutChange = useCallback(
+    (newLayout) => {
+      if (locked || !hasUnlocked.current) return
 
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      newLayout.forEach((item) => {
-        const card = cards.find(c => String(c.id) === item.i)
-        if (!card) return
-        const prev = card.layout || {}
-        if (prev.x === item.x && prev.y === item.y && prev.w === item.w && prev.h === item.h) return
-        updateCard(card.id, { layout: { x: item.x, y: item.y, w: item.w, h: item.h } })
-      })
-      setCards(prev => prev.map(card => {
-        const item = newLayout.find(l => l.i === String(card.id))
-        if (!item) return card
-        return { ...card, layout: { x: item.x, y: item.y, w: item.w, h: item.h } }
-      }))
-    }, 500)
-  }, [locked, cards])
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        newLayout.forEach((item) => {
+          const card = cards.find((c) => String(c.id) === item.i)
+          if (!card) return
+          const prev = card.layout || {}
+          if (
+            prev.x === item.x &&
+            prev.y === item.y &&
+            prev.w === item.w &&
+            prev.h === item.h
+          )
+            return
+          updateCard(card.id, {
+            layout: { x: item.x, y: item.y, w: item.w, h: item.h },
+          })
+        })
+        setCards((prev) =>
+          prev.map((card) => {
+            const item = newLayout.find((l) => l.i === String(card.id))
+            if (!item) return card
+            return {
+              ...card,
+              layout: { x: item.x, y: item.y, w: item.w, h: item.h },
+            }
+          }),
+        )
+      }, 500)
+    },
+    [locked, cards],
+  )
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="flex gap-1.5">
-          {[0, 1, 2].map(i => (
+          {[0, 1, 2].map((i) => (
             <div
               key={i}
               className="w-2 h-2 rounded-full bg-text-muted animate-subtle-pulse"

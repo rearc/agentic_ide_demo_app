@@ -14,7 +14,7 @@ export default function TodoCard({ card }) {
     setError(null)
     return fetchTodos(card.id)
       .then(setItems)
-      .catch(err => setError(err.message))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [card.id])
 
@@ -29,7 +29,7 @@ export default function TodoCard({ card }) {
     setError(null)
     try {
       const todo = await createTodo(card.id, text)
-      setItems(prev => [...prev, todo])
+      setItems((prev) => [...prev, todo])
       setNewText('')
     } catch (err) {
       setError(err.message)
@@ -40,22 +40,22 @@ export default function TodoCard({ card }) {
     setError(null)
     let nextDone
     let found = false
-    setItems(prev => {
-      const t = prev.find(x => x.id === todoId)
+    setItems((prev) => {
+      const t = prev.find((x) => x.id === todoId)
       if (!t) return prev
       found = true
       nextDone = !t.done
-      return prev.map(x => (x.id === todoId ? { ...x, done: nextDone } : x))
+      return prev.map((x) => (x.id === todoId ? { ...x, done: nextDone } : x))
     })
     if (!found) return
     updateTodo(todoId, { done: nextDone })
-      .then(updated => {
-        setItems(prev => prev.map(x => (x.id === updated.id ? updated : x)))
+      .then((updated) => {
+        setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message)
-        setItems(prev =>
-          prev.map(x => (x.id === todoId ? { ...x, done: !nextDone } : x)),
+        setItems((prev) =>
+          prev.map((x) => (x.id === todoId ? { ...x, done: !nextDone } : x)),
         )
       })
   }
@@ -64,7 +64,7 @@ export default function TodoCard({ card }) {
     setError(null)
     try {
       await deleteTodo(id)
-      setItems(prev => prev.filter(t => t.id !== id))
+      setItems((prev) => prev.filter((t) => t.id !== id))
       if (editingId === id) {
         setEditingId(null)
         setEditText('')
@@ -91,7 +91,7 @@ export default function TodoCard({ card }) {
     setError(null)
     try {
       const updated = await updateTodo(editingId, { text: trimmed })
-      setItems(prev => prev.map(t => (t.id === updated.id ? updated : t)))
+      setItems((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
       setEditingId(null)
     } catch (err) {
       setError(err.message)
@@ -108,7 +108,7 @@ export default function TodoCard({ card }) {
     return (
       <div className="flex justify-center py-8">
         <div className="flex gap-1.5">
-          {[0, 1, 2].map(i => (
+          {[0, 1, 2].map((i) => (
             <div
               key={i}
               className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"
@@ -127,7 +127,7 @@ export default function TodoCard({ card }) {
         <input
           type="text"
           value={newText}
-          onChange={e => setNewText(e.target.value)}
+          onChange={(e) => setNewText(e.target.value)}
           placeholder="Add a task…"
           maxLength={500}
           className="flex-1 min-w-0 rounded-sm border border-border-subtle bg-surface px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-card-todo/50"
@@ -143,7 +143,7 @@ export default function TodoCard({ card }) {
         {items.length === 0 ? (
           <li className="text-sm text-text-muted py-2">No tasks yet.</li>
         ) : (
-          items.map(todo => (
+          items.map((todo) => (
             <li
               key={todo.id}
               className="flex items-start gap-2 rounded-sm border border-transparent px-1 py-0.5 hover:border-border-subtle/80 hover:bg-surface/50"
@@ -165,9 +165,9 @@ export default function TodoCard({ card }) {
                 <input
                   type="text"
                   value={editText}
-                  onChange={e => setEditText(e.target.value)}
+                  onChange={(e) => setEditText(e.target.value)}
                   onBlur={commitEdit}
-                  onKeyDown={e => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
                       commitEdit()
@@ -183,7 +183,9 @@ export default function TodoCard({ card }) {
                   type="button"
                   onClick={() => startEdit(todo)}
                   className={`flex-1 min-w-0 text-left text-sm leading-snug rounded px-1 py-0.5 -mx-1 -my-0.5 hover:bg-surface transition-colors ${
-                    todo.done ? 'text-text-muted line-through' : 'text-text-primary'
+                    todo.done
+                      ? 'text-text-muted line-through'
+                      : 'text-text-primary'
                   }`}
                 >
                   {todo.text}

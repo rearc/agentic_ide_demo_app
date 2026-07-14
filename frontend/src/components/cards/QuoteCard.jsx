@@ -20,7 +20,9 @@ export default function QuoteCard({ data }) {
       <p className="mt-4 pt-3 border-t border-border-subtle/60 text-xs text-text-muted tracking-wide uppercase">
         {data.author}
         {data.fallback && (
-          <span className="ml-2 normal-case tracking-normal opacity-50">(offline)</span>
+          <span className="ml-2 normal-case tracking-normal opacity-50">
+            (offline)
+          </span>
         )}
       </p>
     </div>

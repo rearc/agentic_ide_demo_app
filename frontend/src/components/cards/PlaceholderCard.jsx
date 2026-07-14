@@ -16,7 +16,9 @@ export default function PlaceholderCard() {
       >
         What should we build here?
       </p>
-      <p className="text-text-muted text-xs mt-2">Pick a widget and we&apos;ll add it live</p>
+      <p className="text-text-muted text-xs mt-2">
+        Pick a widget and we&apos;ll add it live
+      </p>
     </div>
   )
 }

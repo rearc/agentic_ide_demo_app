@@ -42,20 +42,28 @@ export default function WeatherCard({ data }) {
   }
 
   // Open-Meteo returns Celsius; convert to Fahrenheit client-side for the toggle.
-  const temp = unit === 'C' ? Math.round(data.temp) : Math.round((data.temp * 9) / 5 + 32)
+  const temp =
+    unit === 'C' ? Math.round(data.temp) : Math.round((data.temp * 9) / 5 + 32)
 
   return (
     <div className="h-full flex flex-col justify-center gap-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-5xl font-extrabold tracking-tight leading-[1.15] pr-1" style={gradientText}>
+          <p
+            className="text-5xl font-extrabold tracking-tight leading-[1.15] pr-1"
+            style={gradientText}
+          >
             {temp}°
           </p>
-          <p className="text-sm text-text-secondary capitalize mt-2">{data.description}</p>
+          <p className="text-sm text-text-secondary capitalize mt-2">
+            {data.description}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           {data.icon_emoji && (
-            <span className="text-5xl leading-none drop-shadow-lg">{data.icon_emoji}</span>
+            <span className="text-5xl leading-none drop-shadow-lg">
+              {data.icon_emoji}
+            </span>
           )}
           <UnitToggle unit={unit} setUnit={setUnit} />
         </div>

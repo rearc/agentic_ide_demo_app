@@ -33,14 +33,15 @@ fi
 
 EXT=$(echo "${FILE_PATH##*.}" | tr '[:upper:]' '[:lower:]')
 
-# Route to the appropriate linter based on file extension.
-# JS/JSX/TS/TSX → ESLint (via npx so it picks up the project-local version)
-# Python (.py)  → Ruff (fast Python linter/formatter)
-# If the linter isn't installed, fail open.
+# Route to the appropriate formatter based on file extension.
+# JS/JSX/TS/TSX/CSS → Prettier (via npx so it picks up the project-local version;
+#   run from the file's package root so it resolves the local install + .prettierrc)
+# Python (.py)      → Ruff (fast Python linter/formatter)
+# If the tool isn't installed, fail open (best-effort; never blocks the edit).
 case "$EXT" in
-  js|jsx|ts|tsx)
+  js|jsx|ts|tsx|css)
     if command -v npx &>/dev/null; then
-      npx eslint --fix "$FILE_PATH" 2>/dev/null || true
+      ( cd "$(dirname "$FILE_PATH")" && npx --no-install prettier --write "$FILE_PATH" ) 2>/dev/null || true
     fi
     ;;
   py)

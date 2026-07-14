@@ -30,10 +30,10 @@ export default function SpaceCard({ data }) {
         </a>
       ) : null}
       <h3 className="text-sm font-bold text-text-primary">{data.title}</h3>
-      <p className="text-xs text-text-secondary leading-relaxed">{data.explanation}</p>
-      {data.date && (
-        <p className="text-xs text-text-muted">{data.date}</p>
-      )}
+      <p className="text-xs text-text-secondary leading-relaxed">
+        {data.explanation}
+      </p>
+      {data.date && <p className="text-xs text-text-muted">{data.date}</p>}
     </div>
   )
 }

@@ -7,11 +7,15 @@ import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
 
 const CARD_REGISTRY = {
-  weather:     { component: WeatherCard,     accent: 'card-weather',     needsData: true },
-  quote:       { component: QuoteCard,       accent: 'card-quote',       needsData: true },
-  space:       { component: SpaceCard,       accent: 'card-space',       needsData: true },
-  placeholder: { component: PlaceholderCard, accent: 'card-placeholder', needsData: false },
-  todo:        { component: TodoCard,        accent: 'card-todo',        needsData: false },
+  weather: { component: WeatherCard, accent: 'card-weather', needsData: true },
+  quote: { component: QuoteCard, accent: 'card-quote', needsData: true },
+  space: { component: SpaceCard, accent: 'card-space', needsData: true },
+  placeholder: {
+    component: PlaceholderCard,
+    accent: 'card-placeholder',
+    needsData: false,
+  },
+  todo: { component: TodoCard, accent: 'card-todo', needsData: false },
 }
 
 export default function Card({ card, locked }) {
@@ -21,6 +25,7 @@ export default function Card({ card, locked }) {
 
   const entry = CARD_REGISTRY[card.source] || CARD_REGISTRY.placeholder
   const configKey = JSON.stringify(card.config || {})
+  console.log('card source:', card.source, 'locked?', locked)
 
   useEffect(() => {
     if (!entry.needsData) {
@@ -29,7 +34,7 @@ export default function Card({ card, locked }) {
     }
     fetchCardData(card.source, card.config || {})
       .then(setData)
-      .catch(err => setError(err.message))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [card.source, entry.needsData, configKey])
 
@@ -54,21 +59,30 @@ export default function Card({ card, locked }) {
       {/* Corner glow, intensifies on hover */}
       <div
         className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-15 transition-opacity duration-300 group-hover:opacity-35"
-        style={{ background: 'radial-gradient(circle, var(--b), transparent 70%)' }}
+        style={{
+          background: 'radial-gradient(circle, var(--b), transparent 70%)',
+        }}
       />
       {/* Hover ring glow */}
       <div
         className="pointer-events-none absolute inset-0 rounded-sm opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ boxShadow: '0 0 0 1px color-mix(in oklab, var(--a) 40%, transparent), 0 18px 40px -20px color-mix(in oklab, var(--b) 55%, transparent)' }}
+        style={{
+          boxShadow:
+            '0 0 0 1px color-mix(in oklab, var(--a) 40%, transparent), 0 18px 40px -20px color-mix(in oklab, var(--b) 55%, transparent)',
+        }}
       />
 
       <div className="relative p-5 h-full flex flex-col">
-        <div className={`flex items-center gap-3 mb-4 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}>
+        <div
+          className={`flex items-center gap-3 mb-4 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}
+        >
           <span
             className="grid place-items-center h-9 w-9 shrink-0 rounded-sm text-lg ring-1"
             style={{
-              background: 'linear-gradient(135deg, color-mix(in oklab, var(--a) 22%, transparent), color-mix(in oklab, var(--b) 14%, transparent))',
-              '--tw-ring-color': 'color-mix(in oklab, var(--a) 30%, transparent)',
+              background:
+                'linear-gradient(135deg, color-mix(in oklab, var(--a) 22%, transparent), color-mix(in oklab, var(--b) 14%, transparent))',
+              '--tw-ring-color':
+                'color-mix(in oklab, var(--a) 30%, transparent)',
             }}
           >
             {card.icon}
@@ -77,10 +91,15 @@ export default function Card({ card, locked }) {
             <h2 className="text-[15px] font-bold text-text-primary leading-tight truncate">
               {card.title}
             </h2>
-            <p className="text-xs text-text-muted mt-0.5 truncate">{card.description}</p>
+            <p className="text-xs text-text-muted mt-0.5 truncate">
+              {card.description}
+            </p>
           </div>
           {!locked && (
-            <span className="text-text-muted text-xs select-none" title="Drag to move">
+            <span
+              className="text-text-muted text-xs select-none"
+              title="Drag to move"
+            >
               ⠿
             </span>
           )}
@@ -89,7 +108,7 @@ export default function Card({ card, locked }) {
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="flex gap-1.5">
-                {[0, 1, 2].map(i => (
+                {[0, 1, 2].map((i) => (
                   <div
                     key={i}
                     className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"

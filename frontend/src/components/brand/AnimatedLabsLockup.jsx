@@ -16,13 +16,18 @@ import { useEffect, useId, useMemo, useRef } from 'react'
  */
 
 const MONO_FONT = "'Space Mono', SFMono-Regular, Menlo, monospace"
-const WORDMARK_FONT = "var(--font-general-sans), var(--font-display), Arial, sans-serif"
+const WORDMARK_FONT =
+  'var(--font-general-sans), var(--font-display), Arial, sans-serif'
 const GOLD = '#F2C729'
 const TONE_FG = { navy: '#FFFFFF', cream: '#081229' }
 
 /** Rounded-square track path (viewBox 0 0 100 100, 8..92, corner radius 17). */
 const TRACK = (() => {
-  const x0 = 8, y0 = 8, x1 = 92, y1 = 92, r = 17
+  const x0 = 8,
+    y0 = 8,
+    x1 = 92,
+    y1 = 92,
+    r = 17
   return `M ${x0 + r} ${y0} H ${x1 - r} A ${r} ${r} 0 0 1 ${x1} ${y0 + r} V ${y1 - r} A ${r} ${r} 0 0 1 ${x1 - r} ${y1} H ${x0 + r} A ${r} ${r} 0 0 1 ${x0} ${y1 - r} V ${y0 + r} A ${r} ${r} 0 0 1 ${x0 + r} ${y0} Z`
 })()
 const RACER_PATH = 'M -3.6 -5 L 4.2 0 L -3.6 5'
@@ -87,10 +92,11 @@ export default function AnimatedLabsLockup({
   const fg = TONE_FG[tone]
   const resolvedAccent = accent === 'fg' ? fg : accent
   const uid = useId().replace(/:/g, '')
-  const { font: letterFont, x: letterX, viewW } = useMemo(
-    () => labsLayout(markSize, wordSize),
-    [markSize, wordSize],
-  )
+  const {
+    font: letterFont,
+    x: letterX,
+    viewW,
+  } = useMemo(() => labsLayout(markSize, wordSize), [markSize, wordSize])
 
   const pathRef = useRef(null)
   const markRef = useRef(null)
@@ -111,7 +117,10 @@ export default function AnimatedLabsLockup({
       const p2 = path.getPointAtLength((L + 0.6) % total)
       const ang = (Math.atan2(p2.y - p.y, p2.x - p.x) * 180) / Math.PI
       if (markRef.current) {
-        markRef.current.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${ang})`)
+        markRef.current.setAttribute(
+          'transform',
+          `translate(${p.x} ${p.y}) rotate(${ang})`,
+        )
       }
       if (glowRef.current) {
         glowRef.current.setAttribute('transform', `translate(${p.x} ${p.y})`)
@@ -178,7 +187,10 @@ export default function AnimatedLabsLockup({
           const x = EXIT.x + (letterX[i] - EXIT.x) * easeOutQuad(bp)
           const y = EXIT.y + (H_LETTER_Y - EXIT.y) * easeOutQuad(bp)
           const op = bp < 0.16 ? bp / 0.16 : bp > 0.88 ? (1 - bp) / 0.12 : 1
-          node.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`)
+          node.setAttribute(
+            'transform',
+            `translate(${x.toFixed(2)} ${y.toFixed(2)})`,
+          )
           node.setAttribute('opacity', op.toFixed(3))
           node.setAttribute('r', (1.6 + 0.9 * Math.min(1, bp * 2)).toFixed(2))
         } else {
@@ -202,7 +214,10 @@ export default function AnimatedLabsLockup({
           if (since < GLOW) {
             drainRect.setAttribute('x', '0')
             drainRect.setAttribute('width', String(viewW))
-            if (gg) gg.style.filter = glowFilter(Math.sin((Math.max(0, since) / GLOW) * Math.PI))
+            if (gg)
+              gg.style.filter = glowFilter(
+                Math.sin((Math.max(0, since) / GLOW) * Math.PI),
+              )
           } else if (since < GLOW + DRAIN) {
             const dp = (since - GLOW) / DRAIN
             drainRect.setAttribute('x', (dp * viewW).toFixed(1))
@@ -241,10 +256,23 @@ export default function AnimatedLabsLockup({
       className={className}
       role="img"
       aria-label={title}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: wordSize * 0.55, ...style }}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: wordSize * 0.55,
+        ...style,
+      }}
     >
       <Wordmark size={wordSize} fg={fg} accent={resolvedAccent} />
-      <span aria-hidden="true" style={{ width: 1, height: wordSize * 1.05, background: fg, opacity: 0.2 }} />
+      <span
+        aria-hidden="true"
+        style={{
+          width: 1,
+          height: wordSize * 1.05,
+          background: fg,
+          opacity: 0.2,
+        }}
+      />
       <svg
         width={svgWidth}
         height={svgHeight}
@@ -257,17 +285,51 @@ export default function AnimatedLabsLockup({
           <clipPath id={`${uid}-drain`}>
             <rect ref={drainRef} x="0" y="0" width={viewW} height={VIEW_H} />
           </clipPath>
-          <filter id={`${uid}-blur`} x="-300%" y="-300%" width="700%" height="700%">
+          <filter
+            id={`${uid}-blur`}
+            x="-300%"
+            y="-300%"
+            width="700%"
+            height="700%"
+          >
             <feGaussianBlur stdDeviation="2.4" />
           </filter>
         </defs>
-        <path ref={pathRef} d={TRACK} stroke={fg} strokeWidth="4.4" fill="none" strokeLinejoin="round" opacity="0.9" />
-        <text x="49" y="50" textAnchor="middle" dominantBaseline="central" fontFamily={MONO_FONT} fontWeight="700" fontSize="44" letterSpacing="-2" fill={fg}>
+        <path
+          ref={pathRef}
+          d={TRACK}
+          stroke={fg}
+          strokeWidth="4.4"
+          fill="none"
+          strokeLinejoin="round"
+          opacity="0.9"
+        />
+        <text
+          x="49"
+          y="50"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontFamily={MONO_FONT}
+          fontWeight="700"
+          fontSize="44"
+          letterSpacing="-2"
+          fill={fg}
+        >
           AI
         </text>
         {/* LABS base (foreground tone, always visible). */}
         {LABS_LETTERS.map((ch, i) => (
-          <text key={ch} x={letterX[i]} y={H_LETTER_Y} textAnchor="middle" dominantBaseline="central" fontFamily={MONO_FONT} fontWeight="700" fontSize={letterFont} fill={fg}>
+          <text
+            key={ch}
+            x={letterX[i]}
+            y={H_LETTER_Y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontFamily={MONO_FONT}
+            fontWeight="700"
+            fontSize={letterFont}
+            fill={fg}
+          >
             {ch}
           </text>
         ))}
@@ -276,23 +338,54 @@ export default function AnimatedLabsLockup({
           {LABS_LETTERS.map((ch, i) => (
             <text
               key={ch}
-              ref={(el) => { letterRefs.current[i] = el }}
-              x={letterX[i]} y={H_LETTER_Y}
-              textAnchor="middle" dominantBaseline="central"
-              fontFamily={MONO_FONT} fontWeight="700" fontSize={letterFont}
-              fill={resolvedAccent} style={{ opacity: 0 }}
+              ref={(el) => {
+                letterRefs.current[i] = el
+              }}
+              x={letterX[i]}
+              y={H_LETTER_Y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontFamily={MONO_FONT}
+              fontWeight="700"
+              fontSize={letterFont}
+              fill={resolvedAccent}
+              style={{ opacity: 0 }}
             >
               {ch}
             </text>
           ))}
         </g>
         {/* Racer glow + dots + chevron (parked at right-edge exit for first paint). */}
-        <circle ref={glowRef} r="4" fill={resolvedAccent} filter={`url(#${uid}-blur)`} opacity="0" />
+        <circle
+          ref={glowRef}
+          r="4"
+          fill={resolvedAccent}
+          filter={`url(#${uid}-blur)`}
+          opacity="0"
+        />
         {[0, 1, 2, 3].map((i) => (
-          <circle key={`dot-${i}`} ref={(el) => { dotRefs.current[i] = el }} r="2" fill={resolvedAccent} opacity="0" />
+          <circle
+            key={`dot-${i}`}
+            ref={(el) => {
+              dotRefs.current[i] = el
+            }}
+            r="2"
+            fill={resolvedAccent}
+            opacity="0"
+          />
         ))}
-        <g ref={markRef} transform={`translate(${EXIT.x} ${EXIT.y}) rotate(90)`}>
-          <path d={RACER_PATH} fill="none" stroke={resolvedAccent} strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round" />
+        <g
+          ref={markRef}
+          transform={`translate(${EXIT.x} ${EXIT.y}) rotate(90)`}
+        >
+          <path
+            d={RACER_PATH}
+            fill="none"
+            stroke={resolvedAccent}
+            strokeWidth="3.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </g>
       </svg>
     </span>
