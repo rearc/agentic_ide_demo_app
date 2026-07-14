@@ -5,7 +5,8 @@
       "Write(*)",
       "MultiEdit(*)",
       "NotebookEdit(*)",
-      "Bash(*)"
+      "Bash(*)",
+      "mcp__ide__executeCode"
     ]
   }
 }
