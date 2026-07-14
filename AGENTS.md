@@ -84,18 +84,7 @@ npm run dev
 
 ## How to add a new dashboard “card type”
 
-**First decide the archetype** — every card is one row in `cards` + one `CARD_REGISTRY` entry, differing only in where its data lives:
-- **Data card** (`needsData: true`) — live data via a backend service + `/api/data/<source>` (steps 1–2). *weather, quote, space.*
-- **Static card** (`needsData: false`) — content rendered entirely in the component; **skip steps 1–2 and 5**. *placeholder; a client-only timer/calculator.*
-- **Stateful card** (`needsData: false`) — owns its own model, routes, and table; skip the service (1–2) but **requires an Alembic migration** (step 5). *todo (`models/todo.py`, `routes/todos.py`).*
-
-Cheapest → most work: **static → data → stateful**; only a stateful card needs a migration.
-
-1. **Backend service:** *(data cards only)* Add `backend/app/services/<name>.py` with a `fetch(**kwargs)` (or compatible) function; handle failures with **graceful fallbacks** (pattern: `weather.py`, `quotes.py`, `space.py`).
-2. **Register source:** Add the source string to `SERVICES` in `backend/app/routes/data.py`.
-3. **Frontend widget:** Add `frontend/src/components/cards/<Name>Card.jsx` and wire it in `CARD_REGISTRY` in `Card.jsx` (set `needsData` and `accent` token to match a `--color-card-*` or extend `@theme`).
-4. **Data in DB:** Add a row via `POST /api/cards` or extend `backend/seed.py` and re-seed (seed **deletes all cards** first).
-5. **Schema changes:** If the model changes, add an Alembic migration and run `flask --app run.py db upgrade` (migration conventions: **`.claude/rules/migrations`**).
+Adding a card is a multi-step workflow — use the **`add-dashboard-card` skill** (`.claude/skills/add-dashboard-card/`), which is the authority for the archetype decision (data / static / stateful) and every step (backend service → `SERVICES` → frontend widget → `CARD_REGISTRY` → accent token → seed row → migration-if-stateful). Not restated here.
 
 ## External APIs (current implementations)
 
@@ -107,7 +96,7 @@ Cheapest → most work: **static → data → stateful**; only a stateful card n
 
 - **Scope:** Change only what the task requires; prefer small, reviewable diffs unless the task explicitly calls for a larger refactor.
 - **Verify behavior:** After backend changes, ensure `flask --app run.py db upgrade` and seeds/migrations still make sense. After frontend changes, run `npm run dev` and confirm `/api` proxy matches the Flask port.
-- **Secrets:** Never paste `.env` contents into chat or commit them; use `.env.example` for documenting new keys.
+- **Secrets & security:** governed by **`.claude/rules/security-review`** (authority — not restated here).
 - **Documentation:** If you change ports, proxy targets, or env vars, update `README.md` in the same change when practical.
 
 ## MCP servers
@@ -117,12 +106,12 @@ This repo connects to external services via the Model Context Protocol. Config l
 - **`.mcp.json`** (repo root) -- **read by Claude Code** (both the CLI and the VS Code extension; Claude Code does **not** read `.vscode/mcp.json`). Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
 - **`.vscode/mcp.json`** -- read by **VS Code / GitHub Copilot** agent mode. Top-level key is **`servers`**.
 
-Both define the same three servers: ClickUp (project management), Context7 (documentation lookup), and a project-local coin-flip demo server (stdio via `uv`). There is **no `.cursor/mcp.json`** on this branch. **If you add or change a server, update both files.**
+Both define the same three servers: ClickUp (project management), Context7 (documentation lookup), and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`). **If you add or change a server, update both files.**
 
 ### ClickUp (project management)
 
 - **Endpoint:** `https://mcp.clickup.com/mcp`
-- **Auth:** OAuth 2.1 (run `/mcp` in Claude Code or authenticate via Cursor's MCP panel on first use)
+- **Auth:** OAuth 2.1 (run `/mcp` in Claude Code on first use)
 - **What it provides:** Read and write access to the ClickUp workspace -- tasks, lists, comments, statuses, custom fields. The agent can read tickets, create stories, post comments, and update task status.
 - **When to use:** When a task references a ClickUp ticket, when decomposing Epics into stories, when checking tickets against `docs/standards/definition_of_ready.md`, or when pushing dev-side refinements back to ClickUp.
 
