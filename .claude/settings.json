@@ -40,5 +40,9 @@
         "_apm_source": "rearc-workshop-demo-kit"
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline.sh"
   }
 }
