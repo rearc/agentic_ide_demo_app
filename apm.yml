@@ -11,7 +11,9 @@ description: |
 
 dependencies:
   apm:
-    # Local-path dep against the sibling ai-toolkit monorepo. Pre-publish
-    # form; once rearc/workshop-demo-kit is published, switch to:
-    #   - rearc/workshop-demo-kit
-    - ../ai-toolkit/packages/rearc-workshop-demo-kit
+    # Host-qualified subpath ref against the private ai-toolkit repo (the kit's
+    # canonical install form — see its README + enterprise-private-host.md).
+    # Replaces the old local-path dep (../ai-toolkit/packages/...). Unpinned
+    # here so it tracks the repo default branch; append #<sha>/#<tag> to pin for
+    # reproducibility (current kit HEAD: 91e27b0).
+    - rearc/ai-toolkit-private/packages/rearc-workshop-demo-kit
