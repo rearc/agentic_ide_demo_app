@@ -1,5 +1,10 @@
 # Flask API Conventions
 
+> **Authoritative source:** [`docs/coding_standards.md`](../../docs/coding_standards.md),
+> section 2 (`API`). This file is the always-on excerpt agents see while editing;
+> the standards doc is what code review checks against. If the two disagree, the
+> standards doc wins - fix this file.
+
 All Flask API endpoints must use consistent response shapes and correct HTTP status codes, following Flask's documented patterns.
 
 ## Response Format

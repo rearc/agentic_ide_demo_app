@@ -6,6 +6,11 @@ paths:
 
 # SQLAlchemy & Alembic Migration Best Practices
 
+> **Authoritative source:** [`docs/coding_standards.md`](../../docs/coding_standards.md),
+> section 5 (`DB`). This file is the always-on excerpt agents see while editing;
+> the standards doc is what code review checks against. If the two disagree, the
+> standards doc wins - fix this file.
+
 ## Model Changes
 
 - Always create an Alembic migration after changing a SQLAlchemy model. Never rely on `create_all()` in production.

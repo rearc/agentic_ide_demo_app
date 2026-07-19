@@ -1,7 +1,11 @@
 # ADR-010: No Automated Tests
 
 **Date:** March 2026
-**Status:** Accepted (with acknowledged debt)
+**Status:** Superseded by ADR-016
+
+> Superseded by [ADR-016](ADR-016-test-seam-for-agentic-workflows.md) (July 2026),
+> which adds a pytest + vitest suite and `docs/coding_standards.md`. The context
+> below remains an accurate record of why tests were originally absent.
 
 ### Context
 

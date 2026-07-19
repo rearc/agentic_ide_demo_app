@@ -20,12 +20,13 @@ grill and plan phases of the SDLC flow read these; keep them focused.
 | [007](ADR-007-react-grid-layout.md) | react-grid-layout for the Dashboard Grid | Accepted |
 | [008](ADR-008-service-dispatch-card-registry.md) | Service Dispatch and Card Registry Pattern | Accepted |
 | [009](ADR-009-graceful-api-fallbacks.md) | Graceful API Fallbacks Over Exceptions | Accepted |
-| [010](ADR-010-no-automated-tests.md) | No Automated Tests | Accepted (acknowledged debt) |
+| [010](ADR-010-no-automated-tests.md) | No Automated Tests | Superseded by ADR-016 |
 | [011](ADR-011-no-authentication.md) | No Authentication or User Management | Accepted |
 | [012](ADR-012-latest-dependency-versions.md) | Latest Dependency Versions Across the Stack | Accepted |
 | [013](ADR-013-json-columns-config-layout.md) | JSON Columns for Card Configuration and Layout | Accepted |
 | [014](ADR-014-destructive-seed-script.md) | Destructive Seed Script | Accepted (known limitation) |
 | [015](ADR-015-repo-rename-agentic-ide-demo-app.md) | Repo Rename to agentic_ide_demo_app | Accepted |
+| [016](ADR-016-test-seam-for-agentic-workflows.md) | A Test Seam for Agentic Workflows | Accepted (supersedes ADR-010) |
 
 ## Adding a new ADR
 

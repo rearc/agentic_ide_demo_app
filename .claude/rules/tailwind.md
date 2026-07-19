@@ -6,6 +6,11 @@ paths:
 
 # Tailwind CSS for Component Styling
 
+> **Authoritative source:** [`docs/coding_standards.md`](../../docs/coding_standards.md),
+> section 7 (`CSS`). This file is the always-on excerpt agents see while editing;
+> the standards doc is what code review checks against. If the two disagree, the
+> standards doc wins - fix this file.
+
 Style React components with Tailwind utility classes by default. Inline styles and custom CSS are allowed **only** for the narrow cases below, where Tailwind genuinely cannot express the value.
 
 ## Rules

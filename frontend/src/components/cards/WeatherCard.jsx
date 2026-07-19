@@ -32,7 +32,9 @@ function UnitToggle({ unit, setUnit }) {
 export default function WeatherCard({ data }) {
   const [unit, setUnit] = useState('F')
 
-  if (data?.fallback) {
+  if (!data) return null
+
+  if (data.fallback) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center">
         <p className="text-4xl mb-2">🌤️</p>

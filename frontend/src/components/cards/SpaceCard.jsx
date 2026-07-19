@@ -1,5 +1,7 @@
 export default function SpaceCard({ data }) {
-  if (data?.fallback) {
+  if (!data) return null
+
+  if (data.fallback) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center">
         <p className="text-4xl mb-2">🔭</p>

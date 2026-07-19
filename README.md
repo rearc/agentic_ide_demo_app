@@ -65,6 +65,49 @@ If a fresh `npm install` reports advisories, run `npm audit fix` (never `--force
 
 The app runs at `http://localhost:5173` and proxies API requests to the Flask backend.
 
+## Tests
+
+Both suites are fully offline — every external API call is mocked, so nothing here
+touches the network or a rate limit. Neither suite needs a running server or a
+seeded database; the backend builds a fresh in-memory database per test. See
+[ADR-016](docs/adr/ADR-016-test-seam-for-agentic-workflows.md) for why the suite
+exists, and [`docs/coding_standards.md`](docs/coding_standards.md) for the
+standards it is held to.
+
+### Backend (pytest)
+
+Test-only dependencies live in `backend/requirements-dev.txt`, which also pulls in
+the runtime dependencies:
+
+```bash
+cd backend
+source venv/bin/activate
+pip install -r requirements-dev.txt   # one time
+pytest
+```
+
+### Frontend (vitest)
+
+```bash
+cd frontend
+nvm use
+npm install                    # one time
+npm run test:run               # single run, exits non-zero on failure
+```
+
+`npm test` watches instead, and `npm run test:ui` opens the vitest UI.
+
+### Everything, from a clean checkout
+
+```bash
+(cd backend && source venv/bin/activate && pip install -r requirements-dev.txt && pytest) && \
+(cd frontend && npm install && npm run test:run)
+```
+
+One expected `xfail` in the backend run marks a known defect (deleting a card does
+not delete its todos, because SQLite ships with foreign keys disabled). It is
+recorded in ADR-016 and flips to a failure if the bug is ever fixed.
+
 ## MCP Servers
 
 ### Random Tools

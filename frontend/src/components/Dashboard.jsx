@@ -5,7 +5,7 @@ import 'react-resizable/css/styles.css'
 import { fetchCards, updateCard } from '../api'
 import Card from './Card'
 
-function buildLayout(cards, locked) {
+function buildLayout(cards) {
   return cards.map((card, i) => ({
     i: String(card.id),
     x: card.layout?.x ?? (i % 2) * 6,
@@ -100,7 +100,7 @@ export default function Dashboard({ locked }) {
     )
   }
 
-  const layout = buildLayout(cards, locked)
+  const layout = buildLayout(cards)
 
   return (
     <div>

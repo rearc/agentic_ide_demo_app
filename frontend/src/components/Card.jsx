@@ -25,7 +25,6 @@ export default function Card({ card, locked }) {
 
   const entry = CARD_REGISTRY[card.source] || CARD_REGISTRY.placeholder
   const configKey = JSON.stringify(card.config || {})
-  console.log('card source:', card.source, 'locked?', locked)
 
   useEffect(() => {
     if (!entry.needsData) {
