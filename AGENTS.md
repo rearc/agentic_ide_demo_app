@@ -115,6 +115,10 @@ Both define the same three servers: ClickUp (project management), Context7 (docu
 - **What it provides:** Read and write access to the ClickUp workspace -- tasks, lists, comments, statuses, custom fields. The agent can read tickets, create stories, post comments, and update task status.
 - **When to use:** When a task references a ClickUp ticket, when decomposing Epics into stories, when checking tickets against `docs/standards/definition_of_ready.md`, or when pushing dev-side refinements back to ClickUp.
 
+### GitHub Projects board (Day-4 / Section-4 demo)
+
+The Rearc/GS **Day-4 (Section-4) demo** drives its project board through **GitHub Projects** via the `gh` CLI, *not* ClickUp (the ClickUp entry above is from the SolutionReach engagement). How an agent reads and updates that board - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](board_interaction.md)**. Read it before touching the board.
+
 ### Team standards documents
 
 The `docs/standards/` directory contains team policy documents that AI agents reference during workflows:
