@@ -1,7 +1,13 @@
 # ADR-014: Destructive Seed Script
 
 **Date:** March 2026
-**Status:** Accepted (known limitation)
+**Status:** Superseded by ADR-017
+
+> Superseded by [ADR-017](ADR-017-additive-seed-with-explicit-reset.md)
+> (July 2026), which makes the default seed additive and moves the destructive
+> behavior behind `--reset` - the upsert-based improvement this ADR anticipated.
+> The context below remains an accurate record of how the destructive seed
+> came about.
 
 ### Context
 

@@ -24,9 +24,10 @@ grill and plan phases of the SDLC flow read these; keep them focused.
 | [011](ADR-011-no-authentication.md) | No Authentication or User Management | Accepted |
 | [012](ADR-012-latest-dependency-versions.md) | Latest Dependency Versions Across the Stack | Accepted |
 | [013](ADR-013-json-columns-config-layout.md) | JSON Columns for Card Configuration and Layout | Accepted |
-| [014](ADR-014-destructive-seed-script.md) | Destructive Seed Script | Accepted (known limitation) |
+| [014](ADR-014-destructive-seed-script.md) | Destructive Seed Script | Superseded by ADR-017 |
 | [015](ADR-015-repo-rename-agentic-ide-demo-app.md) | Repo Rename to agentic_ide_demo_app | Accepted |
 | [016](ADR-016-test-seam-for-agentic-workflows.md) | A Test Seam for Agentic Workflows | Accepted (supersedes ADR-010) |
+| [017](ADR-017-additive-seed-with-explicit-reset.md) | Additive Seed with an Explicit Reset | Accepted (supersedes ADR-014) |
 
 ## Adding a new ADR
 

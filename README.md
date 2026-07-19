@@ -40,8 +40,10 @@ Initialize the database:
 
 ```bash
 flask --app run.py db upgrade
-python seed.py                 # WARNING: destructive — wipes and re-seeds the cards
-                               # and todos tables. Any card added at runtime is lost.
+python seed.py                 # additive: inserts only the default cards that are
+                               # missing. Safe to re-run; keeps your cards, todos
+                               # and layout. Use --reset to wipe back to the
+                               # pristine five-card board (destroys your data).
 ```
 
 Start the dev server:

@@ -15,7 +15,7 @@ A **multi-card dashboard**: a React SPA lists **cards** from the backend; each c
 | `backend/` | Flask app factory, SQLAlchemy models, REST blueprints, external API “services” |
 | `backend/migrations/` | Alembic revisions |
 | `backend/run.py` | App entry; runs the dev server when executed |
-| `backend/seed.py` | Wipes and re-seeds the `cards` table |
+| `backend/seed.py` | Inserts missing default cards (additive); `--reset` wipes and re-seeds |
 | `frontend/` | Vite + React; `src/` holds UI |
 | `frontend/src/api.js` | Fetch helpers for `/api/cards` and `/api/data/...` |
 | `frontend/src/components/Card.jsx` | Maps `card.source` → widget component + fetches data |
@@ -41,7 +41,8 @@ source venv/bin/activate
 python --version                  # confirm 3.11+
 pip install -r requirements.txt
 flask --app run.py db upgrade
-python seed.py                    # destructive: wipes + re-seeds cards/todos
+python seed.py                    # additive: adds missing default cards only
+python seed.py --reset            # destructive: wipes + re-seeds cards/todos
 python run.py
 ```
 

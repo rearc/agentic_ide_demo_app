@@ -119,7 +119,7 @@ That last distinction is the whole cost story of adding a card: static is cheape
 - **[backend/app/models/card.py](../backend/app/models/card.py)** — the `Card` model. Point out `config` and `layout` are **JSON columns** (flexible per-card settings and grid position), and `to_dict()` is exactly what the API returns.
 - **[backend/app/models/todo.py](../backend/app/models/todo.py)** — the `Todo` model, with a foreign key to `cards` (`ON DELETE CASCADE`) — deleting the todo card removes its items.
 - **[backend/migrations/versions/](../backend/migrations/versions/)** — the schema's history as **Alembic migrations**: initial cards table → add `layout` column → add todos table. Schema changes go through here, never `create_all()`.
-- **[backend/seed.py](../backend/seed.py)** — resets the board to the starting five cards. ⚠️ **Destructive:** it wipes the `cards` and `todos` tables first, so anything added at runtime is lost on re-seed.
+- **[backend/seed.py](../backend/seed.py)** — inserts any of the starting five cards that are missing. Additive and safe to re-run: cards, todos and layout changes are preserved (ADR-017). ⚠️ `python seed.py --reset` is the destructive path — it wipes the `cards` and `todos` tables first, so anything added at runtime is lost.
 
 ---
 
@@ -151,6 +151,6 @@ that's what an agent follows to build a card end-to-end.
 
 - **Ports:** frontend `5173`, backend `5001`. The frontend proxies `/api` to the backend, so the browser only ever talks to `5173`.
 - **Two-kinds-of-cards** is the mental model that makes everything click — lead with it.
-- **`seed.py` is destructive** — don't run it mid-demo if you've added cards you want to keep.
+- **`seed.py` is safe to re-run mid-demo** — it only adds missing default cards. It is `seed.py --reset` that wipes the board, so don't reach for that flag if you've added cards you want to keep.
 - **Graceful fallbacks:** every data service returns a fallback on failure, so a flaky conference network degrades a card instead of breaking the page.
 - **Where to start a live "add a card":** the empty **Coming Soon** card is the invitation — pick a new widget and walk the 7 touchpoints above.
