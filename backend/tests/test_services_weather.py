@@ -5,10 +5,10 @@ for the forecast. Both calls are registered on `http_mock`; nothing reaches the
 network.
 """
 
-from app.services import weather
+import pytest
 
-GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
+from app.services import weather
+from app.services.weather import FORECAST_URL, GEOCODE_URL
 
 
 def register_geocode(http_mock, results):
@@ -30,6 +30,28 @@ def register_forecast(http_mock, temperature=18.3, humidity=72, weather_code=3):
 
 
 SF_RESULT = [{'latitude': 37.77, 'longitude': -122.42, 'name': 'San Francisco'}]
+
+
+
+@pytest.fixture
+def success_payload(http_mock):
+    """The service's response when the upstream is healthy."""
+    register_geocode(http_mock, SF_RESULT)
+    register_forecast(http_mock)
+    return weather.fetch(city='San Francisco')
+
+
+@pytest.fixture
+def fallback_payload(http_mock):
+    """The service's response when the upstream fails.
+
+    The cache is cleared first: a test using both fixtures would otherwise
+    reuse the coordinates `success_payload` cached and never reach the failing
+    geocode call at all.
+    """
+    weather._geocode.cache_clear()
+    http_mock.get(GEOCODE_URL, status=500)
+    return weather.fetch(city='San Francisco')
 
 
 class TestHappyPath:
@@ -131,21 +153,20 @@ class TestGracefulFallback:
         assert result['fallback'] is True
         assert result['description'] == 'Weather data unavailable'
 
-    def test_fallback_carries_the_same_keys_as_a_success(self, http_mock):
+    def test_fallback_carries_the_same_keys_as_a_success(
+        self, success_payload, fallback_payload
+    ):
         """Convention: a fallback dict matches the success shape plus `fallback`.
 
         The frontend renders one component off both, so a missing key is a crash.
         """
-        register_geocode(http_mock, SF_RESULT)
-        register_forecast(http_mock)
-        success = weather.fetch(city='San Francisco')
+        assert set(fallback_payload) - {'fallback'} == set(success_payload)
 
-        weather._geocode.cache_clear()
-        http_mock.reset()
-        http_mock.get(GEOCODE_URL, status=500)
-        fallback = weather.fetch(city='San Francisco')
-
-        assert set(fallback) - {'fallback'} == set(success)
+    def test_only_the_fallback_is_flagged(self, success_payload, fallback_payload):
+        """Load-bearing for the check above: were `fallback` present on both,
+        the key-parity assertion would pass while SVC-4 was violated."""
+        assert 'fallback' not in success_payload
+        assert fallback_payload['fallback'] is True
 
 
 class TestGeocodeCaching:

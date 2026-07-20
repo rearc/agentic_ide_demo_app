@@ -22,6 +22,12 @@ describe('SpaceCard', () => {
     expect(screen.getByText('2026-07-19')).toBeInTheDocument()
   })
 
+  it('renders nothing when it has no data', () => {
+    const { container } = render(<SpaceCard data={null} />)
+
+    expect(container).toBeEmptyDOMElement()
+  })
+
   it('omits the date when the API did not supply one', () => {
     render(<SpaceCard data={{ ...APOD, date: '' }} />)
 
@@ -79,6 +85,19 @@ describe('SpaceCard', () => {
       render(<SpaceCard data={FALLBACK} />)
 
       expect(screen.getByText(FALLBACK.explanation)).toBeInTheDocument()
+    })
+
+    it('renders the degraded-state treatment, not a normal card', () => {
+      /* The explanation text alone is not enough: the success branch renders it
+         too, so asserting only that would pass with this branch deleted. The
+         telescope glyph and the absent title heading exist only here. */
+      render(<SpaceCard data={FALLBACK} />)
+
+      expect(screen.getByText('🔭')).toBeInTheDocument()
+      expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Space Photo Unavailable'),
+      ).not.toBeInTheDocument()
     })
 
     it('renders no image, so no broken image icon appears', () => {

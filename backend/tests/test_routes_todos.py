@@ -201,3 +201,69 @@ class TestDeleteTodo:
 
         assert response.status_code == 404
         assert response.get_json()['error'] == 'Todo not found'
+
+
+class TestCardIdTypeValidation:
+    """`bool` is a subclass of `int` in Python, so an unguarded `card_id: true`
+    resolves to card 1 and silently attaches the todo to the wrong card."""
+
+    def test_boolean_card_id_is_rejected(self, client, card):
+        response = client.post('/api/todos', json={'card_id': True, 'text': 'A task'})
+
+        assert response.status_code == 400
+        assert response.get_json()['error'] == 'card_id must be an integer'
+
+    def test_boolean_card_id_does_not_create_a_todo(self, client, card):
+        client.post('/api/todos', json={'card_id': True, 'text': 'A task'})
+
+        assert client.get(f'/api/todos?card_id={card.id}').get_json() == []
+
+    def test_string_card_id_is_rejected(self, client, card):
+        response = client.post('/api/todos', json={'card_id': 'abc', 'text': 'A task'})
+
+        assert response.status_code == 400
+
+    def test_non_integer_query_card_id_is_reported_as_invalid_not_missing(self, client):
+        """Reporting a supplied parameter as absent sends the caller looking in
+        the wrong place."""
+        response = client.get('/api/todos?card_id=abc')
+
+        assert response.status_code == 400
+        assert response.get_json()['error'] == 'card_id must be an integer'
+
+
+class TestTextLengthIsEnforcedServerSide:
+    """The frontend's maxLength is a convenience, not a boundary."""
+
+    def test_text_at_the_limit_is_accepted(self, client, card):
+        response = client.post(
+            '/api/todos', json={'card_id': card.id, 'text': 'x' * 500}
+        )
+
+        assert response.status_code == 201
+
+    def test_text_over_the_limit_is_rejected(self, client, card):
+        response = client.post(
+            '/api/todos', json={'card_id': card.id, 'text': 'x' * 501}
+        )
+
+        assert response.status_code == 400
+        assert '500 characters' in response.get_json()['error']
+
+    def test_over_long_text_is_not_persisted(self, client, card):
+        client.post('/api/todos', json={'card_id': card.id, 'text': 'x' * 501})
+
+        assert client.get(f'/api/todos?card_id={card.id}').get_json() == []
+
+    def test_patch_rejects_over_long_text(self, client, card, make_todo):
+        todo = make_todo(card.id)
+
+        response = client.patch(f'/api/todos/{todo.id}', json={'text': 'x' * 501})
+
+        assert response.status_code == 400
+
+    def test_post_without_json_content_type_returns_400(self, client):
+        response = client.post('/api/todos', data='card_id=1')
+
+        assert response.status_code == 400
+        assert response.get_json() == {'error': 'Request body is required'}

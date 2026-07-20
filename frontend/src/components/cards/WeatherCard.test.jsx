@@ -44,6 +44,19 @@ describe('WeatherCard', () => {
     expect(screen.getByText('33°')).toBeInTheDocument()
   })
 
+  it('renders nothing when it has no data', () => {
+    const { container } = render(<WeatherCard data={null} />)
+
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('omits the icon when the API did not supply one', () => {
+    render(<WeatherCard data={{ ...WEATHER, icon_emoji: '' }} />)
+
+    expect(screen.queryByText('☁️')).not.toBeInTheDocument()
+    expect(screen.getByText('65°')).toBeInTheDocument()
+  })
+
   it('renders the conditions, city and icon', () => {
     render(<WeatherCard data={WEATHER} />)
 
@@ -85,6 +98,15 @@ describe('WeatherCard', () => {
 
       expect(screen.getByText('Weather data unavailable')).toBeInTheDocument()
       expect(screen.queryByText(/°$/)).not.toBeInTheDocument()
+    })
+
+    it('renders the degraded-state treatment, not a normal card', () => {
+      /* A marker the success branch cannot produce, so the branch cannot be
+         deleted without failing. */
+      render(<WeatherCard data={FALLBACK} />)
+
+      expect(screen.getByText('🌤️')).toBeInTheDocument()
+      expect(screen.queryByText('San Francisco')).not.toBeInTheDocument()
     })
 
     it('hides the unit toggle, which has nothing to convert', () => {

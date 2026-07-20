@@ -45,15 +45,21 @@ class TestCardConstraints:
         with pytest.raises(IntegrityError):
             db.session.commit()
 
+        db.session.rollback()
+
     def test_slug_is_required(self, app):
         db.session.add(Card(title='No slug', source='weather'))
         with pytest.raises(IntegrityError):
             db.session.commit()
 
+        db.session.rollback()
+
     def test_source_is_required(self, app):
         db.session.add(Card(slug='no-source', title='No source'))
         with pytest.raises(IntegrityError):
             db.session.commit()
+
+        db.session.rollback()
 
 
 class TestCardJsonColumns:
@@ -153,10 +159,14 @@ class TestTodoConstraints:
         with pytest.raises(IntegrityError):
             db.session.commit()
 
+        db.session.rollback()
+
     def test_text_is_required(self, app, card):
         db.session.add(Todo(card_id=card.id))
         with pytest.raises(IntegrityError):
             db.session.commit()
+
+        db.session.rollback()
 
 
 class TestTodoCascadeKnownDefect:

@@ -6,11 +6,9 @@ its own service test plus a dispatch case here.
 """
 
 from app.routes.data import SERVICES
-
-GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
-QUOTES_URL = 'https://zenquotes.io/api/random'
-APOD_URL = 'https://api.nasa.gov/planetary/apod'
+from app.services.quotes import QUOTES_URL
+from app.services.space import APOD_URL
+from app.services.weather import FORECAST_URL, GEOCODE_URL
 
 
 class TestDispatch:
@@ -53,14 +51,56 @@ class TestDispatch:
         assert response.status_code == 200
         assert response.get_json() == {'message': 'Nothing here yet!'}
 
-    def test_every_registered_source_is_reachable(self, client, http_mock):
-        """Guards against a SERVICES entry that is registered but not callable."""
-        http_mock.get(GEOCODE_URL, json={'results': []}, status=200)
-        http_mock.get(QUOTES_URL, status=500)
-        http_mock.get(APOD_URL, status=500)
+    def test_every_registered_source_returns_a_non_empty_object(self, client, http_mock):
+        """Guards against a SERVICES entry that is registered but not callable.
+
+        Asserting only "200" would pass for a source that returns `{}` or another
+        card's data, because every service swallows its own failures (ADR-009).
+        Requiring a non-empty dict is the weakest claim that still fails for a
+        genuinely broken handler.
+        """
+        http_mock.get(
+            GEOCODE_URL,
+            json={'results': [{'latitude': 1.0, 'longitude': 2.0, 'name': 'Somewhere'}]},
+            status=200,
+        )
+        http_mock.get(
+            FORECAST_URL,
+            json={'current': {'temperature_2m': 1.0, 'relative_humidity_2m': 2, 'weather_code': 0}},
+            status=200,
+        )
+        http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}], status=200)
+        http_mock.get(APOD_URL, json={'title': 'Pillars', 'media_type': 'image'}, status=200)
 
         for source in SERVICES:
-            assert client.get(f'/api/data/{source}').status_code == 200, source
+            response = client.get(f'/api/data/{source}')
+
+            assert response.status_code == 200, source
+            body = response.get_json()
+            assert isinstance(body, dict) and body, f'{source} returned {body!r}'
+
+    def test_no_registered_source_reports_a_fallback_when_upstreams_are_healthy(
+        self, client, http_mock
+    ):
+        """If a source falls back while every upstream is stubbed healthy, the
+        service is calling a URL no test knows about."""
+        http_mock.get(
+            GEOCODE_URL,
+            json={'results': [{'latitude': 1.0, 'longitude': 2.0, 'name': 'Somewhere'}]},
+            status=200,
+        )
+        http_mock.get(
+            FORECAST_URL,
+            json={'current': {'temperature_2m': 1.0, 'relative_humidity_2m': 2, 'weather_code': 0}},
+            status=200,
+        )
+        http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}], status=200)
+        http_mock.get(APOD_URL, json={'title': 'Pillars', 'media_type': 'image'}, status=200)
+
+        for source in SERVICES:
+            body = client.get(f'/api/data/{source}').get_json()
+
+            assert 'fallback' not in body, f'{source} fell back against a healthy upstream'
 
 
 class TestUnknownSource:

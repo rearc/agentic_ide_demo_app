@@ -1,8 +1,25 @@
 const API_BASE = '/api'
 
+/**
+ * The API's own `{"error": "..."}` message when it sent one.
+ *
+ * Falls back to `fallback`, then to the status text. Without this, a caller
+ * throws a fixed string and the specific reason the server gave is discarded
+ * before anyone can show it.
+ */
+async function readErrorMessage(res, fallback) {
+  try {
+    const body = await res.json()
+    return body.error || fallback || res.statusText
+  } catch {
+    return fallback || res.statusText
+  }
+}
+
 export async function fetchCards() {
   const res = await fetch(`${API_BASE}/cards`)
-  if (!res.ok) throw new Error('Failed to fetch cards')
+  if (!res.ok)
+    throw new Error(await readErrorMessage(res, 'Failed to fetch cards'))
   return res.json()
 }
 
@@ -12,7 +29,8 @@ export async function updateCard(id, fields) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(fields),
   })
-  if (!res.ok) throw new Error('Failed to update card')
+  if (!res.ok)
+    throw new Error(await readErrorMessage(res, 'Failed to update card'))
   return res.json()
 }
 
@@ -21,17 +39,11 @@ export async function fetchCardData(source, config = {}) {
   const query = params.toString()
   const url = `${API_BASE}/data/${source}${query ? `?${query}` : ''}`
   const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to fetch data for ${source}`)
+  if (!res.ok)
+    throw new Error(
+      await readErrorMessage(res, `Failed to fetch data for ${source}`),
+    )
   return res.json()
-}
-
-async function readErrorMessage(res) {
-  try {
-    const body = await res.json()
-    return body.error || res.statusText
-  } catch {
-    return res.statusText
-  }
 }
 
 export async function fetchTodos(cardId) {

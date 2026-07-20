@@ -6,6 +6,7 @@ tests pin that behavior rather than treating it as a bug.
 """
 
 import seed as seed_module
+from seed import STARTER_TODO_TEXT
 from app import db
 from app.models.card import Card
 from app.models.todo import Todo
@@ -66,7 +67,7 @@ class TestSeedContents:
 
         todo_card = Card.query.filter_by(slug='todo').first()
         todos = Todo.query.filter_by(card_id=todo_card.id).all()
-        assert [t.text for t in todos] == ['Try checking this off']
+        assert [t.text for t in todos] == [STARTER_TODO_TEXT]
 
 
 class TestSeedSourcesMatchTheDispatchTable:

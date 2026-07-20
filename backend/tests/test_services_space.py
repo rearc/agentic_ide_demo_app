@@ -4,9 +4,10 @@ Reference for a service that reads config: it reaches its API key via
 `current_app.config`, so these tests take the `app` fixture for its app context.
 """
 
-from app.services import space
+import pytest
 
-APOD_URL = 'https://api.nasa.gov/planetary/apod'
+from app.services import space
+from app.services.space import APOD_URL
 
 APOD_PAYLOAD = {
     'title': 'Pillars of Creation',
@@ -15,6 +16,21 @@ APOD_PAYLOAD = {
     'date': '2026-07-19',
     'media_type': 'image',
 }
+
+
+
+@pytest.fixture
+def success_payload(app, http_mock):
+    """The service's response when the upstream is healthy."""
+    http_mock.get(APOD_URL, json=APOD_PAYLOAD, status=200)
+    return space.fetch()
+
+
+@pytest.fixture
+def fallback_payload(app, http_mock):
+    """The service's response when the upstream fails."""
+    http_mock.get(APOD_URL, status=500)
+    return space.fetch()
 
 
 class TestHappyPath:
@@ -118,12 +134,11 @@ class TestGracefulFallback:
 
         assert space.fetch()['url'] == ''
 
-    def test_fallback_carries_the_same_keys_as_a_success(self, app, http_mock):
-        http_mock.get(APOD_URL, json=APOD_PAYLOAD, status=200)
-        success = space.fetch()
+    def test_fallback_carries_the_same_keys_as_a_success(
+        self, success_payload, fallback_payload
+    ):
+        assert set(fallback_payload) - {'fallback'} == set(success_payload)
 
-        http_mock.reset()
-        http_mock.get(APOD_URL, status=500)
-        fallback = space.fetch()
-
-        assert set(fallback) - {'fallback'} == set(success)
+    def test_only_the_fallback_is_flagged(self, success_payload, fallback_payload):
+        assert 'fallback' not in success_payload
+        assert fallback_payload['fallback'] is True

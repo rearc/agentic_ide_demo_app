@@ -1,16 +1,15 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TodoCard from './TodoCard'
 import { createTodo, deleteTodo, fetchTodos, updateTodo } from '../../api'
+import { deferred } from '../../test/helpers'
 
-vi.mock('../../api', () => ({
-  fetchTodos: vi.fn(),
-  createTodo: vi.fn(),
-  updateTodo: vi.fn(),
-  deleteTodo: vi.fn(),
-}))
+vi.mock('../../api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return Object.fromEntries(Object.keys(actual).map((name) => [name, vi.fn()]))
+})
 
 const CARD = { id: 5 }
 
@@ -26,11 +25,26 @@ async function renderCard(items = []) {
   return result
 }
 
+/** The checkbox for a given todo, found by its accessible name. */
+function checkboxFor(text) {
+  return screen.getByRole('checkbox', { name: new RegExp(`"${text}"`) })
+}
+
 beforeEach(() => {
-  vi.clearAllMocks()
+  fetchTodos.mockResolvedValue([])
 })
 
 describe('loading todos', () => {
+  it('shows a loading indicator until the todos arrive', () => {
+    fetchTodos.mockReturnValue(new Promise(() => {}))
+
+    render(<TodoCard card={CARD} />)
+
+    expect(
+      screen.getByRole('status', { name: 'Loading todos' }),
+    ).toBeInTheDocument()
+  })
+
   it('requests the todos for its own card', async () => {
     await renderCard()
 
@@ -47,6 +61,22 @@ describe('loading todos', () => {
       await screen.findByRole('button', { name: 'First' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Second' })).toBeInTheDocument()
+  })
+
+  it('gives each todo its own named checkbox', async () => {
+    /* Distinguishable accessible names, so a list with more than one row can
+       still be queried without DOM traversal. */
+    await renderCard([
+      todo({ id: 1, text: 'First' }),
+      todo({ id: 2, text: 'Second' }),
+    ])
+
+    expect(
+      await screen.findByRole('checkbox', { name: /"First"/ }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: /"Second"/ }),
+    ).toBeInTheDocument()
   })
 
   it('shows an empty state when there are no todos', async () => {
@@ -129,6 +159,17 @@ describe('adding a todo', () => {
     expect(createTodo).not.toHaveBeenCalled()
   })
 
+  it('caps the input at the length the API accepts', async () => {
+    /* The server rejects longer text; without this attribute the user only
+       finds out after submitting. */
+    await renderCard([])
+
+    expect(screen.getByPlaceholderText('Add a task…')).toHaveAttribute(
+      'maxLength',
+      '500',
+    )
+  })
+
   it('surfaces a failure and keeps the typed text', async () => {
     const user = userEvent.setup()
     await renderCard([])
@@ -144,15 +185,22 @@ describe('adding a todo', () => {
 })
 
 describe('toggling a todo', () => {
-  it('marks an open todo done', async () => {
+  it('checks the box immediately, before the server confirms', async () => {
+    /* The optimistic update. Asserting only the settled state would pass even
+       with the optimistic update deleted, because the server response produces
+       the same end state - so the assertion happens mid-flight. */
     const user = userEvent.setup()
-    await renderCard([todo({ done: false })])
-    updateTodo.mockResolvedValue(todo({ done: true }))
+    await renderCard([todo({ text: 'A task', done: false })])
+    const pending = deferred()
+    updateTodo.mockReturnValue(pending.promise)
 
-    await user.click(await screen.findByRole('checkbox'))
+    await user.click(checkboxFor('A task'))
 
+    expect(checkboxFor('A task')).toBeChecked()
     expect(updateTodo).toHaveBeenCalledWith(1, { done: true })
-    await waitFor(() => expect(screen.getByRole('checkbox')).toBeChecked())
+
+    pending.resolve(todo({ done: true }))
+    await waitFor(() => expect(checkboxFor('A task')).toBeChecked())
   })
 
   it('reopens a completed todo', async () => {
@@ -165,38 +213,63 @@ describe('toggling a todo', () => {
     expect(updateTodo).toHaveBeenCalledWith(1, { done: false })
   })
 
-  it('reverts the optimistic update when the request fails', async () => {
+  it('adopts the server copy once it arrives', async () => {
+    /* The response replaces the optimistic row, so a server-side correction
+       wins over what the client guessed. */
     const user = userEvent.setup()
-    await renderCard([todo({ done: false })])
-    updateTodo.mockRejectedValue(new Error('done must be a boolean'))
+    await renderCard([todo({ id: 1, text: 'A task', done: false })])
+    updateTodo.mockResolvedValue(
+      todo({ id: 1, text: 'A task (corrected)', done: true }),
+    )
 
-    await user.click(await screen.findByRole('checkbox'))
+    await user.click(checkboxFor('A task'))
+
+    expect(
+      await screen.findByRole('button', { name: 'A task (corrected)' }),
+    ).toBeInTheDocument()
+  })
+
+  it('rolls the checkbox back when the request fails', async () => {
+    const user = userEvent.setup()
+    await renderCard([todo({ text: 'A task', done: false })])
+    const pending = deferred()
+    updateTodo.mockReturnValue(pending.promise)
+
+    await user.click(checkboxFor('A task'))
+    expect(checkboxFor('A task')).toBeChecked()
+
+    pending.reject(new Error('done must be a boolean'))
 
     expect(
       await screen.findByText('done must be a boolean'),
     ).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByRole('checkbox')).not.toBeChecked())
+    await waitFor(() => expect(checkboxFor('A task')).not.toBeChecked())
   })
 })
 
 describe('editing a todo', () => {
-  /** Click a todo's text to open its inline editor, scoped to that list item.
-   *  Scoping matters: the "add a task" field is also a textbox. */
+  /** Open a todo's inline editor, found by its accessible name. */
   async function openEditor(user, text) {
-    const item = (await screen.findByRole('button', { name: text })).closest(
-      'li',
-    )
-    await user.click(within(item).getByRole('button', { name: text }))
-    return { item, editor: within(item).getByRole('textbox') }
+    await user.click(await screen.findByRole('button', { name: text }))
+    return screen.getByRole('textbox', { name: `Edit "${text}"` })
   }
 
   it('opens an editor seeded with the current text', async () => {
     const user = userEvent.setup()
     await renderCard([todo({ text: 'A task' })])
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
 
     expect(editor).toHaveValue('A task')
+  })
+
+  it('caps the editor at the length the API accepts', async () => {
+    const user = userEvent.setup()
+    await renderCard([todo({ text: 'A task' })])
+
+    const editor = await openEditor(user, 'A task')
+
+    expect(editor).toHaveAttribute('maxLength', '500')
   })
 
   it('commits the edit on Enter', async () => {
@@ -204,7 +277,7 @@ describe('editing a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     updateTodo.mockResolvedValue(todo({ text: 'Edited' }))
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.clear(editor)
     await user.type(editor, 'Edited{Enter}')
 
@@ -219,7 +292,7 @@ describe('editing a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     updateTodo.mockResolvedValue(todo({ text: 'Edited' }))
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.clear(editor)
     await user.type(editor, '   Edited   {Enter}')
 
@@ -230,7 +303,7 @@ describe('editing a todo', () => {
     const user = userEvent.setup()
     await renderCard([todo({ text: 'A task' })])
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.type(editor, ' changed{Escape}')
 
     expect(updateTodo).not.toHaveBeenCalled()
@@ -243,7 +316,7 @@ describe('editing a todo', () => {
     const user = userEvent.setup()
     await renderCard([todo({ text: 'A task' })])
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.clear(editor)
     await user.keyboard('{Enter}')
 
@@ -258,7 +331,7 @@ describe('editing a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     updateTodo.mockResolvedValue(todo({ text: 'A taskEdited' }))
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.type(editor, 'Edited')
     await user.tab()
 
@@ -272,7 +345,7 @@ describe('editing a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     updateTodo.mockRejectedValue(new Error('text must be a non-empty string'))
 
-    const { editor } = await openEditor(user, 'A task')
+    const editor = await openEditor(user, 'A task')
     await user.type(editor, '!{Enter}')
 
     expect(
@@ -290,10 +363,9 @@ describe('deleting a todo', () => {
     ])
     deleteTodo.mockResolvedValue(undefined)
 
-    const first = (
-      await screen.findByRole('button', { name: 'First' })
-    ).closest('li')
-    await user.click(within(first).getByTitle('Delete'))
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete "First"' }),
+    )
 
     expect(deleteTodo).toHaveBeenCalledWith(1)
     await waitFor(() =>
@@ -309,12 +381,34 @@ describe('deleting a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     deleteTodo.mockRejectedValue(new Error('Todo not found'))
 
-    const item = (
-      await screen.findByRole('button', { name: 'A task' })
-    ).closest('li')
-    await user.click(within(item).getByTitle('Delete'))
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete "A task"' }),
+    )
 
     expect(await screen.findByText('Todo not found')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'A task' })).toBeInTheDocument()
+  })
+
+  it('closes the editor when the todo being edited is deleted', async () => {
+    /* Otherwise editingId still points at a deleted row, and the editor's blur
+       handler fires an update against it - surfacing a 404 for an action the
+       user never took. */
+    const user = userEvent.setup()
+    await renderCard([todo({ id: 1, text: 'A task' })])
+    deleteTodo.mockResolvedValue(undefined)
+
+    await user.click(screen.getByRole('button', { name: 'A task' }))
+    expect(
+      screen.getByRole('textbox', { name: 'Edit "A task"' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Delete "A task"' }))
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('textbox', { name: 'Edit "A task"' }),
+      ).not.toBeInTheDocument(),
+    )
+    expect(updateTodo).not.toHaveBeenCalled()
   })
 })

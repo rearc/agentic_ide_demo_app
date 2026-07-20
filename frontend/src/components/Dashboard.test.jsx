@@ -2,49 +2,63 @@ import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Dashboard from './Dashboard'
-import { fetchCards, updateCard } from '../api'
+import { DRAG_HANDLE_CLASS } from './Card'
+import { fetchCardData, fetchCards, fetchTodos, updateCard } from '../api'
 
-vi.mock('../api', () => ({
-  fetchCards: vi.fn(),
-  updateCard: vi.fn(),
-  fetchCardData: vi.fn(() => Promise.resolve({})),
-  fetchTodos: vi.fn(() => Promise.resolve([])),
-  createTodo: vi.fn(),
-  updateTodo: vi.fn(),
-  deleteTodo: vi.fn(),
-}))
+vi.mock('../api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return Object.fromEntries(Object.keys(actual).map((name) => [name, vi.fn()]))
+})
 
 // react-grid-layout owns drag/resize maths and needs real layout boxes, which
 // jsdom does not provide. Stub it so these tests cover Dashboard's own logic:
 // which layout it computes, and when it decides to persist one.
-const grid = vi.hoisted(() => ({ onLayoutChange: null }))
-
-vi.mock('react-grid-layout', () => ({
-  GridLayout: ({
-    children,
-    layout,
-    dragConfig,
-    resizeConfig,
-    onLayoutChange,
-  }) => {
-    grid.onLayoutChange = onLayoutChange
-    return (
-      <div
-        data-testid="grid"
-        data-layout={JSON.stringify(layout)}
-        data-drag-enabled={String(dragConfig?.enabled)}
-        data-resize-enabled={String(resizeConfig?.enabled)}
-      >
-        {children}
-      </div>
-    )
-  },
-  useContainerWidth: () => ({
-    width: 1200,
-    containerRef: { current: null },
-    mounted: true,
-  }),
+//
+// `emitOnMount` reproduces the real library's behavior of firing
+// onLayoutChange as it mounts. It runs from the child's effect, which React
+// flushes before the parent's, which is exactly the ordering the hasUnlocked
+// guard exists to survive.
+const grid = vi.hoisted(() => ({
+  onLayoutChange: null,
+  emitOnMount: false,
+  mountLayout: null,
 }))
+
+vi.mock('react-grid-layout', async () => {
+  const { useEffect } = await import('react')
+  return {
+    GridLayout: ({
+      children,
+      layout,
+      dragConfig,
+      resizeConfig,
+      onLayoutChange,
+    }) => {
+      grid.onLayoutChange = onLayoutChange
+      useEffect(() => {
+        // Real react-grid-layout compacts as it mounts, so the layout it
+        // echoes back differs from the one it was handed.
+        if (grid.emitOnMount) onLayoutChange(grid.mountLayout ?? layout)
+      }, [])
+      return (
+        <div
+          data-testid="grid"
+          data-layout={JSON.stringify(layout)}
+          data-drag-enabled={String(dragConfig?.enabled)}
+          data-drag-handle={dragConfig?.handle}
+          data-resize-enabled={String(resizeConfig?.enabled)}
+        >
+          {children}
+        </div>
+      )
+    },
+    useContainerWidth: () => ({
+      width: 1200,
+      containerRef: { current: null },
+      mounted: true,
+    }),
+  }
+})
 
 function cardRecord(overrides = {}) {
   return {
@@ -78,17 +92,33 @@ function renderedLayout() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
   grid.onLayoutChange = null
+  grid.emitOnMount = false
+  grid.mountLayout = null
+  fetchCards.mockResolvedValue([])
+  fetchCardData.mockResolvedValue({})
+  fetchTodos.mockResolvedValue([])
+  updateCard.mockResolvedValue({})
 })
 
 describe('loading and error states', () => {
+  it('shows a loading indicator before the cards arrive', () => {
+    fetchCards.mockReturnValue(new Promise(() => {}))
+
+    render(<Dashboard locked />)
+
+    expect(
+      screen.getByRole('status', { name: 'Loading dashboard' }),
+    ).toBeInTheDocument()
+  })
+
   it('shows the cards once they load', async () => {
     await renderDashboard({ cards: [cardRecord({ title: 'Coming Soon' })] })
 
     expect(
       await screen.findByRole('heading', { name: 'Coming Soon' }),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('renders one grid item per card', async () => {
@@ -144,6 +174,37 @@ describe('layout computation', () => {
       w: 6,
       h: 5,
     })
+  })
+
+  it('keeps stored zero coordinates instead of computing a fallback', async () => {
+    /* A card dragged to the top-left legitimately stores x:0/y:0. Those are
+       falsy, so a `||` fallback would silently relocate it on next load. The
+       second and third cards are what make this detectable: their computed
+       fallbacks differ from zero. */
+    await renderDashboard({
+      cards: [
+        cardRecord({ id: 1, slug: 'a', layout: { x: 0, y: 0, w: 6, h: 4 } }),
+        cardRecord({ id: 2, slug: 'b', layout: { x: 0, y: 0, w: 6, h: 4 } }),
+        cardRecord({ id: 3, slug: 'c', layout: { x: 0, y: 0, w: 6, h: 4 } }),
+      ],
+    })
+
+    expect(renderedLayout()).toMatchObject([
+      { i: '1', x: 0, y: 0 },
+      { i: '2', x: 0, y: 0 }, // a `||` fallback would put this at x:6
+      { i: '3', x: 0, y: 0 }, // and this at y:4
+    ])
+  })
+
+  it('keeps stored zero dimensions instead of computing a fallback', async () => {
+    /* Guards the `??` operator rather than a reachable board state: minW/minH
+       of 2 mean the grid will not itself store a zero width. Kept so the
+       fallback operator stays consistent across all four coordinates. */
+    await renderDashboard({
+      cards: [cardRecord({ id: 1, layout: { x: 0, y: 0, w: 0, h: 0 } })],
+    })
+
+    expect(renderedLayout()[0]).toMatchObject({ i: '1', w: 0, h: 0 })
   })
 
   it('falls back to a computed position when the card has no layout', async () => {
@@ -210,7 +271,6 @@ describe('persisting layout changes', () => {
 
   it('saves the new layout after the debounce window', async () => {
     await renderDashboard({ locked: false })
-    updateCard.mockResolvedValue({})
 
     await changeLayoutAndSettle(MOVED)
 
@@ -229,7 +289,6 @@ describe('persisting layout changes', () => {
 
   it('coalesces a burst of changes into a single save', async () => {
     await renderDashboard({ locked: false })
-    updateCard.mockResolvedValue({})
 
     await act(async () => {
       grid.onLayoutChange([{ i: '1', x: 1, y: 0, w: 3, h: 2 }])
@@ -265,7 +324,6 @@ describe('persisting layout changes', () => {
         cardRecord({ id: 2, slug: 'b', layout: { x: 4, y: 0, w: 4, h: 4 } }),
       ],
     })
-    updateCard.mockResolvedValue({})
 
     await changeLayoutAndSettle([
       { i: '1', x: 0, y: 0, w: 4, h: 4 },
@@ -288,7 +346,6 @@ describe('persisting layout changes', () => {
 
   it('reflects the saved layout in the grid it renders next', async () => {
     await renderDashboard({ locked: false })
-    updateCard.mockResolvedValue({})
 
     await changeLayoutAndSettle(MOVED)
 
@@ -301,23 +358,116 @@ describe('persisting layout changes', () => {
     })
   })
 
-  describe('while locked', () => {
-    it('does not save layout changes', async () => {
-      await renderDashboard({ locked: true })
+  it('does not leave the pending save running after unmount', async () => {
+    /* The debounced callback is a queued write to the API. Unmounting inside
+       the window must cancel it, not fire it against a dead component. */
+    const { unmount } = await renderDashboard({ locked: false })
+
+    await act(async () => {
+      grid.onLayoutChange(MOVED)
+    })
+    unmount()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500)
+    })
+
+    expect(updateCard).not.toHaveBeenCalled()
+  })
+
+  it('survives a failed save without an unhandled rejection', async () => {
+    updateCard.mockRejectedValue(new Error('Failed to update card'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await renderDashboard({ locked: false })
+
+    await changeLayoutAndSettle(MOVED)
+
+    expect(updateCard).toHaveBeenCalled()
+    expect(consoleError).toHaveBeenCalled()
+  })
+
+  describe('the lock guard', () => {
+    it('does not save while locked, even after the user has unlocked once', async () => {
+      const { rerender } = await renderDashboard({ locked: false })
+      rerender(<Dashboard locked />)
 
       await changeLayoutAndSettle(MOVED)
 
       expect(updateCard).not.toHaveBeenCalled()
     })
 
-    it('does not save changes fired before the user has ever unlocked', async () => {
-      /* react-grid-layout emits an onLayoutChange on mount. The hasUnlocked
-         guard exists so that initial echo is not written back to the API. */
-      await renderDashboard({ locked: true })
+    it('persists a layout the grid emits on mount', async () => {
+      /* react-grid-layout compacts as it mounts and reports the result. That
+         is treated like any other layout change, so storage ends up matching
+         what is actually on screen. Deliberate, not incidental: an earlier
+         `hasUnlocked` ref was meant to suppress this and could never fire,
+         because the grid is only rendered once loading is done. */
+      grid.emitOnMount = true
+      grid.mountLayout = [{ i: '1', x: 7, y: 7, w: 2, h: 2 }]
 
-      await changeLayoutAndSettle([{ i: '1', x: 9, y: 9, w: 2, h: 2 }])
+      await renderDashboard({
+        locked: false,
+        cards: [cardRecord({ id: 1, layout: { x: 0, y: 0, w: 4, h: 4 } })],
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500)
+      })
+
+      expect(updateCard).toHaveBeenCalledWith(1, {
+        layout: { x: 7, y: 7, w: 2, h: 2 },
+      })
+    })
+
+    it('does not persist a mount echo that matches the stored layout', async () => {
+      /* The unchanged-layout early return is what keeps the common case a
+         no-op, so a plain page load writes nothing. */
+      grid.emitOnMount = true
+
+      await renderDashboard({
+        locked: false,
+        cards: [cardRecord({ id: 1, layout: { x: 0, y: 0, w: 4, h: 4 } })],
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500)
+      })
 
       expect(updateCard).not.toHaveBeenCalled()
     })
+
+    it('does not persist a mount echo while locked', async () => {
+      grid.emitOnMount = true
+      grid.mountLayout = [{ i: '1', x: 7, y: 7, w: 2, h: 2 }]
+
+      await renderDashboard({
+        locked: true,
+        cards: [cardRecord({ id: 1, layout: { x: 0, y: 0, w: 4, h: 4 } })],
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500)
+      })
+
+      expect(updateCard).not.toHaveBeenCalled()
+    })
+  })
+})
+
+describe('drag handle wiring', () => {
+  /* The selector Dashboard gives the grid and the class Card renders have to
+     agree. They are separate files, so nothing but this test catches a drift
+     that silently disables dragging in the browser. */
+
+  it('hands the grid a selector matching the class Card renders', async () => {
+    await renderDashboard({ locked: false })
+
+    const handle = document.querySelector(`.${DRAG_HANDLE_CLASS}`)
+    expect(handle).not.toBeNull()
+    expect(screen.getByTestId('grid').dataset.dragHandle).toBe(
+      `.${DRAG_HANDLE_CLASS}`,
+    )
+  })
+
+  it('renders no drag handle while locked', async () => {
+    await renderDashboard({ locked: true })
+
+    expect(document.querySelector(`.${DRAG_HANDLE_CLASS}`)).toBeNull()
   })
 })

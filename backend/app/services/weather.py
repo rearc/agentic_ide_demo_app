@@ -5,6 +5,9 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
+FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
+
 WEATHER_CODE_DESCRIPTIONS = {
     0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
     45: 'Foggy', 48: 'Depositing rime fog',
@@ -40,7 +43,7 @@ def _fallback(city, description):
 @lru_cache(maxsize=128)
 def _geocode(city):
     resp = requests.get(
-        'https://geocoding-api.open-meteo.com/v1/search',
+        GEOCODE_URL,
         params={'name': city, 'count': 1},
         timeout=5,
     )
@@ -60,7 +63,7 @@ def fetch(city='San Francisco', **_kwargs):
 
         lat, lon, name = geo
         resp = requests.get(
-            'https://api.open-meteo.com/v1/forecast',
+            FORECAST_URL,
             params={
                 'latitude': lat,
                 'longitude': lon,

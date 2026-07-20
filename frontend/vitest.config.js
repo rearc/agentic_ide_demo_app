@@ -12,7 +12,11 @@ export default defineConfig({
     // Component styling is asserted through class names, never compiled CSS.
     css: false,
     // Undo spies/stubs between tests so one test cannot leak into the next.
+    // mockReset matters as much as restoreMocks: clearing a mock forgets its
+    // calls but keeps its implementation, so a mockResolvedValue set in one
+    // test would otherwise still be in force in the next.
     restoreMocks: true,
+    mockReset: true,
     unstubGlobals: true,
   },
 })

@@ -25,17 +25,28 @@ export function brokenJsonResponse({
   }
 }
 
-/** Point global fetch at a queue of responses, one per call, in order. */
-export function stubFetchSequence(...responses) {
-  const fetchMock = vi.fn()
-  responses.forEach((response) => fetchMock.mockResolvedValueOnce(response))
-  globalThis.fetch = fetchMock
-  return fetchMock
-}
-
 /** Point global fetch at a single response returned for every call. */
 export function stubFetch(response) {
   const fetchMock = vi.fn().mockResolvedValue(response)
   globalThis.fetch = fetchMock
   return fetchMock
+}
+
+/**
+ * A promise whose settlement the test controls.
+ *
+ * Use this to observe a component mid-flight, between the moment it fires a
+ * request and the moment that request settles. Assertions about optimistic
+ * updates need it: once the promise resolves, the optimistic state and the
+ * server-confirmed state look identical, so a test that only checks the end
+ * state passes even when the optimistic update has been deleted.
+ */
+export function deferred() {
+  let resolve
+  let reject
+  const promise = new Promise((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
 }

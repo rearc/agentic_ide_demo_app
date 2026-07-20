@@ -106,7 +106,11 @@ export default function TodoCard({ card }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
+      <div
+        className="flex justify-center py-8"
+        role="status"
+        aria-label="Loading todos"
+      >
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <div
@@ -152,6 +156,7 @@ export default function TodoCard({ card }) {
                 type="button"
                 role="checkbox"
                 aria-checked={todo.done}
+                aria-label={`Mark "${todo.text}" ${todo.done ? 'not done' : 'done'}`}
                 onClick={() => toggleDone(todo.id)}
                 className={`mt-0.5 h-4 w-4 shrink-0 rounded border text-[10px] leading-none flex items-center justify-center transition-colors ${
                   todo.done
@@ -174,6 +179,7 @@ export default function TodoCard({ card }) {
                     }
                     if (e.key === 'Escape') cancelEdit()
                   }}
+                  aria-label={`Edit "${todo.text}"`}
                   maxLength={500}
                   autoFocus
                   className="flex-1 min-w-0 rounded border border-border-subtle bg-surface px-2 py-0.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-card-todo/50"
@@ -193,9 +199,14 @@ export default function TodoCard({ card }) {
               )}
               <button
                 type="button"
+                // Deleting while this row's editor is open would otherwise blur
+                // it first, committing an edit against the row being deleted
+                // and surfacing a 404 for an action the user never took.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => remove(todo.id)}
                 className="shrink-0 p-1 text-text-muted hover:text-red-400/90 text-xs"
                 title="Delete"
+                aria-label={`Delete "${todo.text}"`}
               >
                 ×
               </button>

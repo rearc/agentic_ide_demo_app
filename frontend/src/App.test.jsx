@@ -12,10 +12,6 @@ vi.mock('./components/Dashboard', () => ({
   ),
 }))
 
-vi.mock('./components/brand/AnimatedLabsLockup', () => ({
-  default: ({ title }) => <div data-testid="lockup">{title}</div>,
-}))
-
 function dashboardLocked() {
   return screen.getByTestId('dashboard').dataset.locked
 }
@@ -24,7 +20,9 @@ describe('chrome', () => {
   it('renders the brand lockup and product name', () => {
     render(<App />)
 
-    expect(screen.getByTestId('lockup')).toHaveTextContent('Rearc AI Labs')
+    expect(
+      screen.getByRole('img', { name: 'Rearc AI Labs' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'Control Center' }),
     ).toBeInTheDocument()
@@ -94,10 +92,14 @@ describe('clock', () => {
   })
 
   it('renders the current time and date', () => {
+    /* Asserted locale-independently (TEST-3): the component formats with the
+       runtime's default locale, so matching "July 19" would fail on a machine
+       set to de-DE, where the same instant renders "19. Juli". The digits are
+       the same in every locale. */
     render(<App />)
 
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
-    expect(screen.getByText(/July 19/)).toBeInTheDocument()
+    expect(screen.getByText(/\b\d{1,2}:\d{2}\b/)).toBeInTheDocument()
+    expect(screen.getByText(/\b19\b/)).toBeInTheDocument()
   })
 
   it('advances as time passes', () => {
@@ -111,14 +113,26 @@ describe('clock', () => {
     expect(screen.getByText(/\d{1,2}:\d{2}/).textContent).not.toBe(before)
   })
 
-  it('clears its interval on unmount', () => {
-    /* FE-6: an interval left running after unmount leaks and keeps setting
-       state on a dead component. */
+  it('ticks every second, not on some slower cadence', () => {
+    /* Advancing a full minute would pass for any interval up to 60s. One
+       second is the actual contract. */
+    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
+
+    render(<App />)
+
+    expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000)
+  })
+
+  it('clears its own interval on unmount', () => {
+    /* FE-6. Asserting only that clearInterval was called would pass if some
+       unrelated timer were cleared, so the id is captured and compared. */
+    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
     const { unmount } = render(<App />)
+    const intervalId = setIntervalSpy.mock.results[0].value
 
     unmount()
 
-    expect(clearIntervalSpy).toHaveBeenCalled()
+    expect(clearIntervalSpy).toHaveBeenCalledWith(intervalId)
   })
 })

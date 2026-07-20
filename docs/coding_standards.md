@@ -223,6 +223,17 @@ same standard as the code it covers.
   behavior `xfail(strict=True)` so it flips to a failure when fixed.
 - **TEST-10 — Both suites must be green before commit.** See README for the
   commands.
+- **TEST-11 — Test each half of a compound condition.** For a guard like
+  `if (a || !b) return`, a test where `a` and `!b` are both true proves neither
+  clause is load-bearing: either one can be deleted and the suite stays green.
+  Give each clause a case where it alone does the work. This applies to the
+  fallback operators too - `??` and `||` differ only on `0` and `''`.
+- **TEST-12 — Fixtures must span the boundary being tested.** A test that runs
+  the line but cannot distinguish correct from incorrect is not coverage. If
+  the code has a zero-vs-falsy branch, the fixture needs a zero; if it has a
+  length cap, the fixture needs a value on each side of it. A fallback branch
+  must be asserted via a marker the success branch cannot produce, or deleting
+  the branch will not fail anything.
 
 ```python
 # GOOD - one behavior, named for it, failure path covered

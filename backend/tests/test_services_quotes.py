@@ -1,8 +1,24 @@
 """Tests for the quotes service - the simplest service shape (one call, no config)."""
 
-from app.services import quotes
+import pytest
 
-QUOTES_URL = 'https://zenquotes.io/api/random'
+from app.services import quotes
+from app.services.quotes import QUOTES_URL
+
+
+
+@pytest.fixture
+def success_payload(http_mock):
+    """The service's response when the upstream is healthy."""
+    http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}], status=200)
+    return quotes.fetch()
+
+
+@pytest.fixture
+def fallback_payload(http_mock):
+    """The service's response when the upstream fails."""
+    http_mock.get(QUOTES_URL, status=500)
+    return quotes.fetch()
 
 
 class TestHappyPath:
@@ -75,12 +91,11 @@ class TestGracefulFallback:
 
         assert quotes.fetch()['fallback'] is True
 
-    def test_fallback_carries_the_same_keys_as_a_success(self, http_mock):
-        http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}], status=200)
-        success = quotes.fetch()
+    def test_fallback_carries_the_same_keys_as_a_success(
+        self, success_payload, fallback_payload
+    ):
+        assert set(fallback_payload) - {'fallback'} == set(success_payload)
 
-        http_mock.reset()
-        http_mock.get(QUOTES_URL, status=500)
-        fallback = quotes.fetch()
-
-        assert set(fallback) - {'fallback'} == set(success)
+    def test_only_the_fallback_is_flagged(self, success_payload, fallback_payload):
+        assert 'fallback' not in success_payload
+        assert fallback_payload['fallback'] is True

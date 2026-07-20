@@ -5,13 +5,15 @@ from flask import current_app
 
 logger = logging.getLogger(__name__)
 
+APOD_URL = 'https://api.nasa.gov/planetary/apod'
+
 
 def fetch(**_kwargs):
     api_key = current_app.config.get('NASA_API_KEY', '') or 'DEMO_KEY'
 
     try:
         resp = requests.get(
-            'https://api.nasa.gov/planetary/apod',
+            APOD_URL,
             params={'api_key': api_key},
             timeout=5,
         )

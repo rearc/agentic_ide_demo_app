@@ -232,3 +232,42 @@ describe('deleteTodo', () => {
     await expect(deleteTodo(999)).rejects.toThrow('Todo not found')
   })
 })
+
+describe('server error messages', () => {
+  /* The API explains failures in an `error` field. Discarding it leaves the
+     dashboard showing a fixed string no matter what actually went wrong. */
+
+  it('surfaces the API error from fetchCards', async () => {
+    stubFetch(
+      jsonResponse({ error: 'Database is unavailable' }, { status: 500 }),
+    )
+
+    await expect(fetchCards()).rejects.toThrow('Database is unavailable')
+  })
+
+  it('falls back to a generic message when the body has no error field', async () => {
+    stubFetch(jsonResponse({}, { status: 500 }))
+
+    await expect(fetchCards()).rejects.toThrow('Failed to fetch cards')
+  })
+
+  it('surfaces the API error from updateCard', async () => {
+    stubFetch(jsonResponse({ error: 'Card not found' }, { status: 404 }))
+
+    await expect(updateCard(1, {})).rejects.toThrow('Card not found')
+  })
+
+  it('surfaces the API error from fetchCardData', async () => {
+    stubFetch(jsonResponse({ error: 'Unknown source: nope' }, { status: 404 }))
+
+    await expect(fetchCardData('nope')).rejects.toThrow('Unknown source: nope')
+  })
+
+  it('still names the source when the body has no error field', async () => {
+    stubFetch(jsonResponse({}, { status: 404 }))
+
+    await expect(fetchCardData('nope')).rejects.toThrow(
+      'Failed to fetch data for nope',
+    )
+  })
+})

@@ -6,6 +6,15 @@ import SpaceCard from './cards/SpaceCard'
 import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
 
+/**
+ * Class marking the drag target within a card.
+ *
+ * Dashboard hands react-grid-layout the matching selector. Defined once
+ * because the two must agree: if they drift, dragging silently stops working
+ * with no error anywhere.
+ */
+export const DRAG_HANDLE_CLASS = 'card-drag-handle'
+
 const CARD_REGISTRY = {
   weather: { component: WeatherCard, accent: 'card-weather', needsData: true },
   quote: { component: QuoteCard, accent: 'card-quote', needsData: true },
@@ -28,13 +37,31 @@ export default function Card({ card, locked }) {
 
   useEffect(() => {
     if (!entry.needsData) {
+      setError(null)
       setLoading(false)
       return
     }
+    // Reset per-fetch state, or a card that errored once keeps showing that
+    // error even after a later fetch succeeds.
+    setLoading(true)
+    setError(null)
+
+    // Guard against an earlier request resolving after a later one and
+    // overwriting fresher data.
+    let current = true
     fetchCardData(card.source, card.config || {})
-      .then(setData)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+      .then((result) => {
+        if (current) setData(result)
+      })
+      .catch((err) => {
+        if (current) setError(err.message)
+      })
+      .finally(() => {
+        if (current) setLoading(false)
+      })
+    return () => {
+      current = false
+    }
   }, [card.source, entry.needsData, configKey])
 
   const CardContent = entry.component
@@ -73,7 +100,7 @@ export default function Card({ card, locked }) {
 
       <div className="relative p-5 h-full flex flex-col">
         <div
-          className={`flex items-center gap-3 mb-4 ${!locked ? 'card-drag-handle cursor-grab active:cursor-grabbing' : ''}`}
+          className={`flex items-center gap-3 mb-4 ${!locked ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
         >
           <span
             className="grid place-items-center h-9 w-9 shrink-0 rounded-sm text-lg ring-1"
@@ -105,7 +132,11 @@ export default function Card({ card, locked }) {
         </div>
         <div className="flex-1 min-h-0 overflow-auto card-scroll">
           {loading ? (
-            <div className="flex justify-center py-8">
+            <div
+              className="flex justify-center py-8"
+              role="status"
+              aria-label="Loading card data"
+            >
               <div className="flex gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <div

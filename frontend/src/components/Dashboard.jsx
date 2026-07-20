@@ -3,7 +3,7 @@ import { GridLayout, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { fetchCards, updateCard } from '../api'
-import Card from './Card'
+import Card, { DRAG_HANDLE_CLASS } from './Card'
 
 function buildLayout(cards) {
   return cards.map((card, i) => ({
@@ -21,7 +21,6 @@ export default function Dashboard({ locked }) {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const hasUnlocked = useRef(false)
   const saveTimer = useRef(null)
   const { width, containerRef, mounted } = useContainerWidth()
 
@@ -32,13 +31,17 @@ export default function Dashboard({ locked }) {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (!locked) hasUnlocked.current = true
-  }, [locked])
+  // The debounced save is a pending write to the API. Without this, unmounting
+  // inside the window still fires it and then sets state on a dead component.
+  useEffect(() => () => clearTimeout(saveTimer.current), [])
 
   const handleLayoutChange = useCallback(
     (newLayout) => {
-      if (locked || !hasUnlocked.current) return
+      // Layout events the grid emits on its own (mount-time compaction,
+      // resize) are persisted too. That keeps storage matching what is on
+      // screen; the unchanged-layout check below keeps it to a no-op when
+      // compaction changes nothing.
+      if (locked) return
 
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {
@@ -55,6 +58,10 @@ export default function Dashboard({ locked }) {
             return
           updateCard(card.id, {
             layout: { x: item.x, y: item.y, w: item.w, h: item.h },
+          }).catch((err) => {
+            // Not fatal: the board still shows the new arrangement, it just
+            // did not persist. Surfaced rather than swallowed (LOG-3).
+            console.error('Failed to save card layout', err)
           })
         })
         setCards((prev) =>
@@ -74,7 +81,11 @@ export default function Dashboard({ locked }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div
+        className="flex items-center justify-center py-24"
+        role="status"
+        aria-label="Loading dashboard"
+      >
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <div
@@ -111,7 +122,7 @@ export default function Dashboard({ locked }) {
             layout={layout}
             onLayoutChange={handleLayoutChange}
             gridConfig={{ cols: 12, rowHeight: 40, margin: [16, 16] }}
-            dragConfig={{ enabled: !locked, handle: '.card-drag-handle' }}
+            dragConfig={{ enabled: !locked, handle: `.${DRAG_HANDLE_CLASS}` }}
             resizeConfig={{ enabled: !locked }}
           >
             {cards.map((card, i) => (

@@ -5,6 +5,8 @@ return a bare list, single resources return the object, errors return
 {"error": "..."}, and DELETE returns 204 with an empty body.
 """
 
+import pytest
+
 
 class TestListCards:
     def test_returns_a_bare_list_not_an_envelope(self, client, make_card):
@@ -129,6 +131,27 @@ class TestCreateCard:
 
         assert body['layout'] == {}
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason='create_card does not read `layout`, though update_card does',
+    )
+    def test_create_should_honor_a_supplied_layout(self, client):
+        """The desired behavior. Flips to a failure when the gap is closed,
+        which is the signal to delete the test above."""
+        layout = {'x': 1, 'y': 2, 'w': 3, 'h': 4}
+
+        body = client.post(
+            '/api/cards',
+            json={
+                'slug': 'stocks',
+                'title': 'Stocks',
+                'source': 'stocks',
+                'layout': layout,
+            },
+        ).get_json()
+
+        assert body['layout'] == layout
+
 
 class TestUpdateCard:
     def test_updates_mutable_fields(self, client, card):
@@ -185,3 +208,74 @@ class TestDeleteCard:
 
     def test_unknown_id_returns_404(self, client):
         assert client.delete('/api/cards/999').status_code == 404
+
+
+class TestCreateCardRejectsBadValues:
+    """Presence checks are not type checks: a null or non-string value used to
+    reach the NOT NULL constraint and surface as a 500 with an HTML body."""
+
+    def test_null_required_field_returns_400_not_500(self, client):
+        response = client.post(
+            '/api/cards', json={'slug': None, 'title': None, 'source': None}
+        )
+
+        assert response.status_code == 400
+        assert 'non-empty strings' in response.get_json()['error']
+
+    def test_null_field_names_the_offending_fields(self, client):
+        response = client.post(
+            '/api/cards', json={'slug': 'ok', 'title': None, 'source': 'weather'}
+        )
+
+        assert response.status_code == 400
+        assert 'title' in response.get_json()['error']
+
+    def test_non_string_field_returns_400(self, client):
+        response = client.post(
+            '/api/cards', json={'slug': 123, 'title': 'X', 'source': 'weather'}
+        )
+
+        assert response.status_code == 400
+
+    def test_whitespace_only_field_returns_400(self, client):
+        response = client.post(
+            '/api/cards', json={'slug': '   ', 'title': 'X', 'source': 'weather'}
+        )
+
+        assert response.status_code == 400
+
+    def test_a_rejected_card_is_not_persisted(self, client):
+        client.post('/api/cards', json={'slug': None, 'title': None, 'source': None})
+
+        assert client.get('/api/cards').get_json() == []
+
+
+class TestWriteRoutesRequireAJsonBody:
+    """A request with no JSON content type must still get our JSON 400, not
+    werkzeug's 415 with an HTML body (API-4, SEC-4)."""
+
+    def test_post_without_json_content_type_returns_400(self, client):
+        response = client.post('/api/cards', data='slug=stocks')
+
+        assert response.status_code == 400
+        assert response.get_json() == {'error': 'Request body is required'}
+
+    def test_post_with_malformed_json_returns_400(self, client):
+        response = client.post(
+            '/api/cards',
+            data='{not valid json',
+            content_type='application/json',
+        )
+
+        assert response.status_code == 400
+
+    def test_error_response_is_json_not_html(self, client):
+        response = client.post('/api/cards', data='slug=stocks')
+
+        assert response.content_type.startswith('application/json')
+
+    def test_put_without_json_content_type_returns_400(self, client, card):
+        response = client.put(f'/api/cards/{card.id}', data='title=Renamed')
+
+        assert response.status_code == 400
+        assert response.get_json() == {'error': 'Request body is required'}

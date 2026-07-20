@@ -2,15 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Card from './Card'
-import { fetchCardData } from '../api'
+import { fetchCardData, fetchTodos } from '../api'
+import { deferred } from '../test/helpers'
 
-vi.mock('../api', () => ({
-  fetchCardData: vi.fn(),
-  fetchTodos: vi.fn(() => Promise.resolve([])),
-  createTodo: vi.fn(),
-  updateTodo: vi.fn(),
-  deleteTodo: vi.fn(),
-}))
+// Derived from the real module rather than listed by hand, so adding an export
+// to api.js cannot silently arrive here as undefined.
+vi.mock('../api', async (importOriginal) => {
+  const actual = await importOriginal()
+  return Object.fromEntries(Object.keys(actual).map((name) => [name, vi.fn()]))
+})
 
 function cardRecord(overrides = {}) {
   return {
@@ -36,9 +36,10 @@ const WEATHER_DATA = {
   humidity: 72,
 }
 
+// mockReset clears implementations between tests, so defaults live here.
 beforeEach(() => {
-  vi.clearAllMocks()
   fetchCardData.mockResolvedValue(WEATHER_DATA)
+  fetchTodos.mockResolvedValue([])
 })
 
 describe('chrome', () => {
@@ -188,20 +189,20 @@ describe('data fetching', () => {
 })
 
 describe('load and error states', () => {
-  it('shows the widget once loading resolves', async () => {
-    let resolve
-    fetchCardData.mockReturnValue(
-      new Promise((r) => {
-        resolve = r
-      }),
-    )
+  it('shows a loading indicator until the fetch settles', async () => {
+    const pending = deferred()
+    fetchCardData.mockReturnValue(pending.promise)
+
     render(<Card card={cardRecord()} locked />)
 
-    expect(screen.queryByText('Overcast')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('status', { name: 'Loading card data' }),
+    ).toBeInTheDocument()
 
-    resolve(WEATHER_DATA)
+    pending.resolve(WEATHER_DATA)
 
     expect(await screen.findByText('Overcast')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('shows the error message when the fetch fails', async () => {
@@ -223,5 +224,68 @@ describe('load and error states', () => {
 
     await screen.findByText('boom')
     expect(screen.getByRole('heading', { name: 'Weather' })).toBeInTheDocument()
+  })
+
+  it('clears a previous error once a refetch succeeds', async () => {
+    /* Without resetting error state per fetch, a card that failed once shows
+       that stale message forever, even after a later fetch succeeds. */
+    fetchCardData.mockRejectedValueOnce(new Error('upstream boom'))
+    const { rerender } = render(
+      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+    )
+    await screen.findByText('upstream boom')
+
+    fetchCardData.mockResolvedValueOnce(WEATHER_DATA)
+    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+
+    expect(await screen.findByText('Overcast')).toBeInTheDocument()
+    expect(screen.queryByText('upstream boom')).not.toBeInTheDocument()
+  })
+
+  it('shows loading again while a refetch is in flight', async () => {
+    const { rerender } = render(
+      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+    )
+    await screen.findByText('Overcast')
+
+    const pending = deferred()
+    fetchCardData.mockReturnValue(pending.promise)
+    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+
+    expect(
+      await screen.findByRole('status', { name: 'Loading card data' }),
+    ).toBeInTheDocument()
+
+    pending.resolve({ ...WEATHER_DATA, description: 'Clear sky' })
+    expect(await screen.findByText('Clear sky')).toBeInTheDocument()
+  })
+
+  it('ignores a stale response that lands after a newer one', async () => {
+    /* Rapid config changes race. Without a guard, the slower earlier request
+       resolves last and overwrites the fresher data. */
+    const first = deferred()
+    const second = deferred()
+    fetchCardData.mockReturnValueOnce(first.promise)
+    fetchCardData.mockReturnValueOnce(second.promise)
+
+    const { rerender } = render(
+      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+    )
+    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+
+    second.resolve({
+      ...WEATHER_DATA,
+      city: 'Denver',
+      description: 'Clear sky',
+    })
+    expect(await screen.findByText('Clear sky')).toBeInTheDocument()
+
+    // The abandoned first request now returns with older data.
+    first.resolve({ ...WEATHER_DATA, city: 'Boston', description: 'Overcast' })
+
+    await waitFor(() =>
+      expect(screen.getByText('Clear sky')).toBeInTheDocument(),
+    )
+    expect(screen.queryByText('Overcast')).not.toBeInTheDocument()
   })
 })

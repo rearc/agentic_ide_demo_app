@@ -20,7 +20,9 @@ def get_card(card_id):
 
 @cards_bp.route('/cards', methods=['POST'])
 def create_card():
-    data = request.get_json()
+    # silent=True so a request with no JSON content type returns our 400 with a
+    # JSON error body, rather than werkzeug's 415 with an HTML one.
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'error': 'Request body is required'}), 400
 
@@ -28,6 +30,16 @@ def create_card():
     missing = [f for f in required if f not in data]
     if missing:
         return jsonify({'error': f'Missing required fields: {", ".join(missing)}'}), 400
+
+    # Presence is not enough: a null or non-string value reaches the NOT NULL
+    # constraint and surfaces as a 500 instead of a validation error.
+    invalid = [
+        f for f in required if not isinstance(data[f], str) or not data[f].strip()
+    ]
+    if invalid:
+        return jsonify(
+            {'error': f'Fields must be non-empty strings: {", ".join(invalid)}'}
+        ), 400
 
     if Card.query.filter_by(slug=data['slug']).first():
         return jsonify({'error': f'Card with slug "{data["slug"]}" already exists'}), 409
@@ -50,7 +62,7 @@ def create_card():
 @cards_bp.route('/cards/<int:card_id>', methods=['PUT'])
 def update_card(card_id):
     card = db.get_or_404(Card, card_id)
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'error': 'Request body is required'}), 400
 
