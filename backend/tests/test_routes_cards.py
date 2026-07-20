@@ -184,6 +184,40 @@ class TestUpdateCard:
 
         assert client.get('/api/cards').get_json() == []
 
+    def test_updates_the_config_a_card_fetches_with(self, client, card):
+        """config drives the query string sent to /api/data/<source>, so a card
+        that cannot be reconfigured cannot be repointed."""
+        config = {'city': 'Boston', 'units': 'metric'}
+
+        client.put(f'/api/cards/{card.id}', json={'config': config})
+
+        assert client.get(f'/api/cards/{card.id}').get_json()['config'] == config
+
+    def test_updates_position(self, client, make_card):
+        """position is the sort key the dashboard renders in."""
+        first = make_card(slug='first', position=1)
+        make_card(slug='second', position=2)
+
+        client.put(f'/api/cards/{first.id}', json={'position': 3})
+
+        slugs = [c['slug'] for c in client.get('/api/cards').get_json()]
+        assert slugs == ['second', 'first']
+
+    def test_updates_source(self, client, card):
+        """source is the dispatch key on both registries (ADR-008)."""
+        client.put(f'/api/cards/{card.id}', json={'source': 'quote'})
+
+        assert client.get(f'/api/cards/{card.id}').get_json()['source'] == 'quote'
+
+    def test_updates_description_and_icon(self, client, card):
+        client.put(
+            f'/api/cards/{card.id}', json={'description': 'Rewritten', 'icon': '🌦️'}
+        )
+
+        body = client.get(f'/api/cards/{card.id}').get_json()
+        assert body['description'] == 'Rewritten'
+        assert body['icon'] == '🌦️'
+
     def test_unknown_id_returns_404(self, client):
         assert client.put('/api/cards/999', json={'title': 'X'}).status_code == 404
 
