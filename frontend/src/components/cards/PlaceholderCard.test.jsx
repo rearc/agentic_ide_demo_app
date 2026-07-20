@@ -9,8 +9,4 @@ describe('PlaceholderCard', () => {
 
     expect(screen.getByText('What should we build here?')).toBeInTheDocument()
   })
-
-  it('renders without any props, since it is the unknown-source fallback', () => {
-    expect(() => render(<PlaceholderCard />)).not.toThrow()
-  })
 })

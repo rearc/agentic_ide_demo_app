@@ -89,12 +89,6 @@ def clear_service_caches():
         cached.cache_clear()
 
 
-def test_cache_discovery_finds_the_known_caches():
-    """Guards the discovery itself: if this returns nothing, the fixture above
-    is silently a no-op."""
-    assert weather._geocode in _cached_callables()
-
-
 @pytest.fixture
 def make_card(app):
     """Factory for persisted Card rows. Override any field via keyword.

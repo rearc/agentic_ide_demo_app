@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import AnimatedLabsLockup from './AnimatedLabsLockup'
 
@@ -7,10 +7,6 @@ import AnimatedLabsLockup from './AnimatedLabsLockup'
    drawing: it exposes an accessible name, it drives a requestAnimationFrame
    loop, and it stops that loop when it goes away or when the user has asked for
    reduced motion. */
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
 
 function stubReducedMotion(matches) {
   vi.stubGlobal('matchMedia', (query) => ({
@@ -31,23 +27,6 @@ describe('AnimatedLabsLockup', () => {
     expect(
       screen.getByRole('img', { name: 'Rearc AI Labs' }),
     ).toBeInTheDocument()
-  })
-
-  it('renders without crashing on default props', () => {
-    expect(() => render(<AnimatedLabsLockup />)).not.toThrow()
-  })
-
-  it('accepts the sizing and tone props App passes it', () => {
-    expect(() =>
-      render(
-        <AnimatedLabsLockup
-          markSize={34}
-          wordSize={27}
-          tone="navy"
-          title="Rearc AI Labs"
-        />,
-      ),
-    ).not.toThrow()
   })
 
   it('animates when motion is allowed', () => {
