@@ -7,11 +7,15 @@
     "node": ">=22"
   },
   "scripts": {
+    "check:node": "node -e \"var m=+process.versions.node.split('.')[0]; if(m<22){console.error('\\n[STOP] Node '+process.version+' detected - this test suite requires Node >=22.\\n        On Node 20 the suite fails with ERR_REQUIRE_ESM and reports ZERO tests,\\n        which looks like \\'no tests were written\\' but is a Node version problem.\\n        Fix: nvm use   (see frontend/.nvmrc)\\n'); process.exit(1)}\"",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "pretest": "npm run check:node",
     "test": "vitest",
+    "pretest:run": "npm run check:node",
     "test:run": "vitest run",
+    "pretest:ui": "npm run check:node",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
