@@ -10,6 +10,12 @@
 
 - A **GitHub Projects (v2)** project owned by the presenter (e.g. `markdegroat`). Each run works a
   **copy** of the golden, so the **project number varies per run**. Find it: `gh project list --owner <owner>`.
+- **NEVER write to the GOLDEN board.** `gh project list` returns **both** the per-run copy and the golden
+  template (titled `... (GOLDEN)`). The golden is the source every future run is copied from, and it **must
+  stay 100% draft issues** - adding a real issue to it corrupts `copy --drafts` for every run after.
+  **Rules:** (1) if the project title contains `GOLDEN`, it is **read-only** - never add, convert, or edit;
+  (2) if you were told a project number, use **only** that one; (3) if you were **not** told which board and
+  more than one matches, **stop and ask** - do not guess. Guessing wrong is not recoverable by undo.
 - The **golden** board's pre-seeded items are **draft issues** (no repo issue number) - that is what makes
   `gh project copy --drafts` able to duplicate them. **Items created live during a run are REAL GitHub
   issues**, because the engineering skills' tracker is GitHub Issues and `wayfinder`/`to-tickets` need
