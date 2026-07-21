@@ -15,15 +15,20 @@
   issues**, because the engineering skills' tracker is GitHub Issues and `wayfinder`/`to-tickets` need
   native sub-issue + blocking relationships that drafts cannot carry.
 - **When you publish a ticket, also set its board fields** - APM's auto-add puts the issue on the board but
-  sets **no** custom fields. Set **Status** (`Backlog`, or `Ready` if unblocked) and **Epic** (= the parent
-  epic). Leave **Execution** (Agent/HITL/Either) to the human - it is the PM's "who works this" call.
+  sets **no** custom fields. Set **Status** (`Backlog`, or `Ready` if unblocked), **Epic** (= the parent
+  epic), and **Execution**.
+- **`Execution` mirrors the triage label you already applied**: `ready-for-agent` -> `Agent`,
+  `ready-for-human` -> `HITL`, and `Either` when it genuinely could go either way. Do not leave it blank.
+  The label is the per-ticket signal; the field is the same signal lifted to a **board dimension** so it can
+  be grouped and filtered across the whole backlog. Set it from the label, then let the human **override** -
+  reassigning who works a slice is the PM's call, not yours.
 - **Create child tickets as native sub-issues of the parent epic**, and wire blocking with native issue
   dependencies (see "Native issue relationships" below). Sub-issues auto-add to the board via the
   `Auto-add sub-issues to project` workflow, so adding the parent once pulls the whole tree in.
 - **Status workflow:** Backlog -> Ready -> In Progress -> In Review -> Blocked -> Done.
 - **Fields:** `Status`, `Type` (Epic/Story/Task/Bug), `Priority` (Urgent/High/Medium/Low),
   `Story Points` (number), `Epic` (single-select, one option per epic), `Execution` (Agent/HITL/Either -
-  the PM's label for who works a story).
+  who works a story; mirrors the `ready-for-agent`/`ready-for-human` label, human overrides).
 
 ## Read the board
 
