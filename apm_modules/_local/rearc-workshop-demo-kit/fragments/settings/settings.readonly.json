@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(*)",
+      "Write(*)",
+      "MultiEdit(*)",
+      "NotebookEdit(*)",
+      "Bash(*)",
+      "mcp__ide__executeCode"
+    ]
+  }
+}

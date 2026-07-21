@@ -107,24 +107,37 @@ This repo connects to external services via the Model Context Protocol. Config l
 - **`.mcp.json`** (repo root) -- **read by Claude Code** (both the CLI and the VS Code extension; Claude Code does **not** read `.vscode/mcp.json`). Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
 - **`.vscode/mcp.json`** -- read by **VS Code / GitHub Copilot** agent mode. Top-level key is **`servers`**.
 
-Both define the same three servers: ClickUp (project management), Context7 (documentation lookup), and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`). **If you add or change a server, update both files.**
+Both define the same servers: Context7 (documentation lookup) and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`). **If you add or change a server, update both files.**
 
-### ClickUp (project management)
+> **ClickUp is deprecated and removed.** It was a SolutionReach-engagement artifact and is not coming back. Do not re-add it, and do not propose it as an issue-tracker backend.
 
-- **Endpoint:** `https://mcp.clickup.com/mcp`
-- **Auth:** OAuth 2.1 (run `/mcp` in Claude Code on first use)
-- **What it provides:** Read and write access to the ClickUp workspace -- tasks, lists, comments, statuses, custom fields. The agent can read tickets, create stories, post comments, and update task status.
-- **When to use:** When a task references a ClickUp ticket, when decomposing Epics into stories, when checking tickets against `docs/standards/definition_of_ready.md`, or when pushing dev-side refinements back to ClickUp.
+### Project board + issue tracker
 
-### GitHub Projects board (Day-4 / Section-4 demo)
+**Issue tracker = GitHub Issues** on this repo (via the `gh` CLI). The engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`) read and write there; the configured details live in `docs/agents/issue-tracker.md`.
 
-The Rearc/GS **Day-4 (Section-4) demo** drives its project board through **GitHub Projects** via the `gh` CLI, *not* ClickUp (the ClickUp entry above is from the SolutionReach engagement). How an agent reads and updates that board - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](board_interaction.md)**. Read it before touching the board.
+The **GitHub Projects board** sits on top of those issues and is what the Day-4 (Section-4) demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](board_interaction.md)**. Read it before touching the board.
 
 ### Team standards documents
 
 The `docs/standards/` directory contains team policy documents that AI agents reference during workflows:
 
-- **`docs/standards/definition_of_ready.md`** -- The team's Definition of Ready checklist. Agents read this file when evaluating whether a ClickUp ticket is ready for development. See the file's "How this document is used" section for details.
+- **`docs/standards/definition_of_ready.md`** -- The team's Definition of Ready checklist. Agents read this file when evaluating whether a ticket is ready for development. See the file's "How this document is used" section for details.
+
+## Agent skills
+
+Per-repo configuration the engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`, `implement`, `domain-modeling`) read at runtime.
+
+### Issue tracker
+
+GitHub Issues on `rearc/agentic_ide_demo_app`, via the `gh` CLI. See [`docs/agents/issue-tracker.md`](agents/issue-tracker.md).
+
+### Triage labels
+
+The five canonical roles, each label string equal to its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See [`docs/agents/triage-labels.md`](agents/triage-labels.md).
+
+### Domain docs
+
+Single-context — one root `CONTEXT.md` (lazily created) plus `docs/adr/`. See [`docs/agents/domain.md`](agents/domain.md).
 
 ## Known inconsistencies
 

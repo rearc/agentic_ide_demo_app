@@ -1,9 +1,5 @@
 {
   "mcpServers": {
-    "clickup": {
-      "type": "http",
-      "url": "https://mcp.clickup.com/mcp"
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"

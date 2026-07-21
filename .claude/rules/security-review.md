@@ -1,15 +1,6 @@
 # Security Review Checklist
 
-> **Authoritative source:** [`docs/coding_standards.md`](../../docs/coding_standards.md),
-> section 9 (`SEC`). This file is the always-on excerpt agents see while editing;
-> the standards doc is what code review checks against. If the two disagree, the
-> standards doc wins - fix this file.
-
 Use this checklist when reviewing code for security concerns.
-
-Note: the Authentication & Authorization section below does not apply to this
-app, which has no auth by deliberate decision (ADR-011). It is kept as reference
-for the patterns it describes.
 
 ## Input Validation
 

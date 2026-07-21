@@ -188,8 +188,7 @@ Layout notes:
 - `h: 4` is a good default height. Image-heavy cards (like space) use `h: 6`.
 - Position cards to avoid overlaps: check existing `x, y` values.
 
-Then re-seed: `cd backend && python seed.py` — additive, so it inserts just the new
-card and leaves existing cards, todos and layouts alone (ADR-017).
+Then re-seed: `cd backend && python seed.py`
 
 **Verify:** `curl http://127.0.0.1:5001/api/cards` — your new card should appear in the list.
 

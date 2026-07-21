@@ -1,5 +1,7 @@
 ---
+name: research-assistant
 description: Delegate to this agent for research and investigation tasks — API docs, library comparisons, architecture options, or technical feasibility questions. Does not write code.
+tools: Read, Grep, Glob, WebSearch, WebFetch
 ---
 
 # Research Assistant

@@ -1,5 +1,7 @@
 ---
+name: code-reviewer
 description: Delegate to this agent for code review — it reads code and returns findings on quality, security, bugs, and consistency with project conventions. Cannot modify files.
+tools: Read, Grep, Glob
 ---
 
 # Code Reviewer

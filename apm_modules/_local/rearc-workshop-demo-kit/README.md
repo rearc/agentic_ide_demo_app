@@ -14,6 +14,7 @@ This is an **APM-native kit** ([ADR-0016](../../ADR.md#adr-0016-external-install
 |---|---|
 | `code-reviewer` | Reads code and returns structured findings against the project's security checklist, conventions, and quality rules. Does not modify files. |
 | `research-assistant` | Investigates topics (API docs, library comparisons, architecture options) and returns concise summaries. Does not write code. |
+| `_agent-reference` | Annotated catalog of all subagent frontmatter fields — a reference doc to read, not a working agent (the subagent analog of the `_frontmatter-reference` skill). |
 
 **Instructions** (cross-tool always-applied / on-demand context):
 
@@ -34,24 +35,36 @@ This is an **APM-native kit** ([ADR-0016](../../ADR.md#adr-0016-external-install
 | `coin-flip-true-random` | Heads/tails via random.org atmospheric noise |
 | `flip-until-heads` | Repeatedly invokes `coin-flip-true-random` until heads, with per-flip visibility |
 | `commit-message` | Drafts a `Verb: Description` subject + body from staged diff, asks intent questions, never auto-commits |
+| `flask-api-conventions` | Backend conventions (service-layer shape, data-route wiring, config/secrets) — knowledge skill, auto-available on `backend/**` paths |
+| `_frontmatter-reference` | Catalog of all 16 skill frontmatter fields — the "show every control surface" reference skill |
 
-**Hooks** (Claude Code-style format, deployed via APM's hooks primitive):
+**Hooks** (deployed via APM's hooks primitive). Each hook ships **one manifest per target** (`*-claude-hooks.json` / `*-copilot-hooks.json` / `*-cursor-hooks.json`), routed by APM's filename-stem suffix — because APM 0.18.0 renames hook events only for the `claude` (and `gemini`) targets, never for `copilot` or `cursor`, so a single Claude-shape manifest deploys unusable to those two (`hook event casing mismatch (no mapping): PreToolUse`, then ignored). See [ADR-0026](../../ADR.md#adr-0026-rearcbase-ships-per-target-hook-manifests-copilot-runs-hooks-only-on-its-interactive-path) and [ADR-0029](../../ADR.md#adr-0029-rearcworkshop-demo-kit-ships-three-way-per-target-hook-manifests-cursor-hooks-use-native-camelcase-events-and-accept-apms-spurious-casing-warning).
 
-| Hook | Event | What it does |
+| Hook | Claude event | Copilot event | Cursor event(s) | What it does |
+|---|---|---|---|---|
+| `audit` | `PreToolUse` `.*` | `preToolUse` | `beforeShellExecution`, `beforeMCPExecution`, `afterFileEdit`, `beforeSubmitPrompt`, `stop` | Logs every tool call to `/tmp/agent-audit.log` (always exits 0 — Copilot `preToolUse` is fail-closed) |
+| `safety` | `PreToolUse` `Bash` | `preToolUse` | `beforeShellExecution` | Blocks `rm -rf`, `DROP TABLE`, `git push --force`, `.env` references, etc. |
+| `lint` | `PostToolUse` `Edit\|Write\|MultiEdit` | `postToolUse` | `afterFileEdit` | Routes edited files to ESLint or Ruff with `--fix` |
+
+The hook scripts dispatch on the **payload shape** each harness sends, emitting that harness's deny response:
+
+| Harness | Tool/command field | Deny response |
 |---|---|---|
-| `audit` | PreToolUse `.*` | Logs every tool call to `/tmp/agent-audit.log` |
-| `safety` | PreToolUse `Bash` | Blocks `rm -rf`, `DROP TABLE`, `git push --force`, `.env` references, etc. Emits harness-appropriate block responses (Cursor `permission: deny` / Claude Code `decision: block`). |
-| `lint` | PostToolUse `Edit\|Write\|MultiEdit` | Routes edited files to ESLint or Ruff with `--fix` |
+| Claude Code | `.tool_name` + `.tool_input.command` | `{"decision":"block","reason":...}` (exit 2) |
+| Copilot CLI | `.toolName` + `.toolArgs` (a JSON-encoded **string**) | `{"permissionDecision":"deny","permissionDecisionReason":...}` (exit 2) |
+| VS Code Copilot | `.tool_name` (`run_in_terminal`) + `.tool_input.command` | `{"permissionDecision":"deny","userFacingMessage":...}` |
+| Cursor | top-level `.command` / `.file_path` | `{"permission":"deny","user_message":...,"agent_message":...}` |
 
-The hook scripts handle both Cursor's and Claude Code's hook JSON payloads — `tool_input.file_path` / `tool_input.command` for Claude Code, top-level `.file_path` / `.command` for Cursor.
+**Cursor caveat (APM-0.18.0 limitation).** Cursor's native hook events are camelCase (`beforeShellExecution`, `afterFileEdit`, per [cursor.com/docs/agent/hooks](https://cursor.com/docs/agent/hooks)), so the cursor manifests are authored that way and reach `.cursor/hooks.json` intact. APM's cursor adapter wrongly assumes PascalCase and prints a cosmetic `casing mismatch (no mapping)` warning on install for each cursor event — it does **not** block deployment and the hooks still fire. Expect that warning until APM ships a cursor event mapping.
+
+**Copilot headless caveat.** Copilot CLI runs these hooks on its **interactive** path only — headless `copilot -p` does not fire them (an unfiled upstream limitation, same finding as [ADR-0026](../../ADR.md#adr-0026-rearcbase-ships-per-target-hook-manifests-copilot-runs-hooks-only-on-its-interactive-path)). In headless Copilot flows the active control is the agent's posture/instruction layer, not these hooks. Claude Code runs them fully in both headless and interactive modes.
 
 **MCP server registrations** (deployed via APM's `mcp:` primitive):
 
 | Name | Transport | What it provides |
 |---|---|---|
-| `clickup` | HTTP (`https://mcp.clickup.com/mcp`) | ClickUp tasks, lists, comments — OAuth 2.1 on first use |
 | `context7` | HTTP (`https://mcp.context7.com/mcp`) | Documentation lookup — free tier, no auth |
-| `coin-flip-mcp` | stdio (`uv run mcp-servers/coin-flip-mcp/server.py`) | Local demo MCP server — bundled in this kit; sidecar `setup.sh` copies it into the consumer project so the path resolves project-relative |
+| `random-tools` | stdio (`uv run mcp-servers/random-tools-mcp/server.py`) | Local demo MCP server — bundled in this kit; sidecar `setup.sh` copies it into the consumer project so the path resolves project-relative |
 
 ### Upstream skills (via APM per-skill subpath refs)
 
@@ -69,8 +82,9 @@ Two of the four legacy names have drifted since `skills-lock.json` was last refr
 ## Prerequisites
 
 - `apm` — https://microsoft.github.io/apm/getting-started/installation/
-- `uv` — https://docs.astral.sh/uv/ (required at runtime for the bundled `coin-flip-mcp` server)
-- `python3` — required by the hook scripts and the coin-flip-code skills
+- `uv` — https://docs.astral.sh/uv/ (required at runtime for the bundled `random-tools` server)
+- `jq` — required by the hook scripts (payload parsing + harness-appropriate deny responses; same as `rearc/base`)
+- `python3` — required by the coin-flip-code skills
 - `npx` (optional) — used by `auto-lint.sh` for ESLint on JS/TS edits
 - `ruff` (optional) — used by `auto-lint.sh` for Python edits
 
@@ -79,9 +93,11 @@ Two of the four legacy names have drifted since `skills-lock.json` was last refr
 From any project:
 
 ```bash
-apm install rearc/workshop-demo-kit
-bash apm_modules/rearc/workshop-demo-kit/scripts/setup.sh
+apm install -t claude,copilot,cursor rearc/ai-toolkit-private/packages/rearc-workshop-demo-kit
+bash apm_modules/rearc/ai-toolkit-private/packages/rearc-workshop-demo-kit/scripts/setup.sh
 ```
+
+The package installs from this repo's subpath — no clone, no marketplace required (see [enterprise-private-host.md](../../enterprise-private-host.md)). Pin the ref for reproducibility: append `#<tag-or-sha>` to the package ref.
 
 During in-repo dev (against this monorepo's local-path dep form):
 
@@ -89,9 +105,11 @@ During in-repo dev (against this monorepo's local-path dep form):
 bash apm_modules/_local/rearc-workshop-demo-kit/scripts/setup.sh
 ```
 
-`apm install` deploys the agents, instructions, skills, hooks, and MCP server registrations to every IDE config dir APM auto-detects (`.claude/`, `.github/`, `.cursor/`, `.codex/`, `.gemini/`, `.opencode/`). `setup.sh` then copies the bundled `coin-flip-mcp` server source into `mcp-servers/coin-flip-mcp/` in the consumer project so the stdio MCP command resolves to a stable project-relative path.
+> **Pick your targets.** On APM 0.18.0, `apm install` no longer fans out to every detected IDE — with more than one harness present it errors and asks you to choose. Pass `-t`/`--target` (as above, with the IDEs the workshop demonstrates) or declare `targets:` in your `apm.yml`.
 
-You'll see APM print `[i] N dependencies have no pinned version` on install. That's expected — the 4 upstream subpath refs are intentionally unpinned per [ADR-0024](../../ADR.md#adr-0024-rearcresearch-kit-upstream-deps-stay-unpinned-in-010-apm-0110-transitive-cleanup-on-uninstall-is-broken-under-pinning) until APM 0.11.0's resolver bug is fixed.
+`apm install` deploys the agents, instructions, skills, hooks, and MCP server registrations to the config dirs for your chosen targets. Skills land in `.claude/skills/` (Claude) and `.agents/skills/` (Copilot, per APM #1103); agents, instructions, and hooks land in each target's own location. `setup.sh` then copies the bundled `random-tools` server source into `mcp-servers/random-tools-mcp/` in the consumer project so the stdio MCP command resolves to a stable project-relative path.
+
+You'll see APM print `[!] N dependencies unpinned: <list> -- add #tag or #sha to prevent drift` on install. That's expected — the 4 upstream subpath refs are intentionally unpinned per [ADR-0024](../../ADR.md#adr-0024-rearcresearch-kit-upstream-deps-stay-unpinned-in-010-apm-0110-transitive-cleanup-on-uninstall-is-broken-under-pinning) because pinning breaks `apm uninstall` cleanup (re-validated against APM 0.18.0, todo.md item 15 — still broken; this kit ships its own content, so pinning would leak the deployed upstream skills on uninstall).
 
 ## Substrate posture
 
@@ -102,13 +120,13 @@ You'll see APM print `[i] N dependencies have no pinned version` on install. Tha
 ## Uninstall
 
 ```bash
-apm uninstall rearc/workshop-demo-kit
+apm uninstall rearc/ai-toolkit-private/packages/rearc-workshop-demo-kit
 ```
 
-APM consults `apm.lock.yaml`'s `deployed_files` and removes only what was deployed by `apm install`. The bundled MCP server files at `mcp-servers/coin-flip-mcp/` are project content (placed there by `setup.sh`) and are not tracked in `apm.lock.yaml` — remove them manually if desired:
+APM consults `apm.lock.yaml`'s `deployed_files` and removes only what was deployed by `apm install`. The bundled MCP server files at `mcp-servers/random-tools-mcp/` are project content (placed there by `setup.sh`) and are not tracked in `apm.lock.yaml` — remove them manually if desired:
 
 ```bash
-rm -r mcp-servers/coin-flip-mcp
+rm -r mcp-servers/random-tools-mcp
 ```
 
 The `/tmp/agent-audit.log` file is also not removed — it's host-level state, not project state.
@@ -120,24 +138,27 @@ packages/rearc-workshop-demo-kit/
 ├── apm.yml                 # 4 upstream skill subpaths, 3 MCP servers, 1 dev setup script
 ├── README.md               # this file
 ├── .apm/                   # Rearc-authored APM primitives — deployed by `apm install`
-│   ├── agents/             # code-reviewer, research-assistant
+│   ├── agents/             # code-reviewer, research-assistant, _agent-reference
 │   ├── instructions/       # api-conventions, migrations, security-review, tailwind
-│   ├── skills/             # add-dashboard-card, coin-flip(-code|-true-random), flip-until-heads, commit-message
-│   └── hooks/              # audit.json, safety.json, lint.json
+│   ├── skills/             # add-dashboard-card, coin-flip(-code|-true-random), flip-until-heads, commit-message, flask-api-conventions, _frontmatter-reference
+│   └── hooks/              # per-target manifests: {audit,safety,lint}-{claude,copilot,cursor}-hooks.json
+├── fragments/
+│   └── settings/           # Claude showcase settings (readonly, strongerreadonly, sandbox, example.jsonc, hooks-showcase) — copied to .claude/ by setup.sh
 ├── scripts/                # bash sidecars (invoked via direct `bash` per ADR-0013)
-│   ├── setup.sh            # deploys mcp-servers/coin-flip-mcp/ into the consumer
-│   └── hooks/              # audit.sh, guard-shell.sh, auto-lint.sh — referenced by .apm/hooks/ via ${CLAUDE_PLUGIN_ROOT}
+│   ├── setup.sh            # deploys random-tools-mcp/ + .claude/ showcase settings + statusline into the consumer
+│   ├── statusline.sh       # status-line meter (copied to .claude/statusline.sh + registered in settings.json by setup.sh)
+│   └── hooks/              # audit.sh, guard-shell.sh, auto-lint.sh — payload-shape dispatch across harnesses
 └── mcp-servers/
-    └── coin-flip-mcp/      # FastMCP-based demo server (server.py + requirements.txt)
+    └── random-tools-mcp/      # FastMCP-based demo server (server.py + requirements.txt) — coin_flip + roll_die
 ```
 
-Nothing under `mcp-servers/` or `scripts/` is deployed by `apm install`; both directories are package-source content per [ADR-0017](../../ADR.md#adr-0017-sidecar-content-lives-at-package-root-not-under-dev). The hook scripts are referenced from `.apm/hooks/*.json` via `${CLAUDE_PLUGIN_ROOT}/scripts/hooks/...` so they resolve at install time.
+Nothing under `mcp-servers/` or `scripts/` is deployed by `apm install`; both directories are package-source content per [ADR-0017](../../ADR.md#adr-0017-sidecar-content-lives-at-package-root-not-under-dev). The hook scripts are referenced from `.apm/hooks/*.json` via `${CLAUDE_PLUGIN_ROOT}/scripts/hooks/...` (Claude) / `${PLUGIN_ROOT}/scripts/hooks/...` (Copilot, Cursor) so they resolve at install time.
 
 ## Maintainer notes
 
 ### Workshop-temporary status
 
-This kit's primary purpose is backing the `cursor_workshop_demo_app` (and future Claude Code / Copilot workshop variants of it). It's not currently planned for publish. The four upstream skill subpaths are unpinned per ADR-0024; pre-publish (if that becomes a goal), pin every entry to a single SHA and rerun the harness.
+This kit's primary purpose is backing the [`agentic_ide_demo_app`](https://github.com/rearc/agentic_ide_demo_app) (originally `cursor_workshop_demo_app`, renamed when the repo broadened beyond cursor-only workshop variants). It's not currently planned for publish. The four upstream skill subpaths are unpinned per ADR-0024; pre-publish (if that becomes a goal), pin every entry to a single SHA and rerun the harness.
 
 ### Drift watch on upstream skill names
 

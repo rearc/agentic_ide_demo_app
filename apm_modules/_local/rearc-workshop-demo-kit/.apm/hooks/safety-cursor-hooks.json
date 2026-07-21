@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      { "command": "${PLUGIN_ROOT}/scripts/hooks/guard-shell.sh" }
+    ]
+  }
+}

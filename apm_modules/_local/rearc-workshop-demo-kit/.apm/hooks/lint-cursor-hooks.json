@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      { "command": "${PLUGIN_ROOT}/scripts/hooks/auto-lint.sh" }
+    ]
+  }
+}

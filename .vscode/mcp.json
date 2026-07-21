@@ -1,10 +1,5 @@
 {
   "servers": {
-    "clickup": {
-      "type": "http",
-      "url": "https://mcp.clickup.com/mcp",
-      "headers": {}
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp",

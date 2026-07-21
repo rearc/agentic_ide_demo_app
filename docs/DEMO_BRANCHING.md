@@ -28,7 +28,26 @@ main  ──────────●────────────●�
   and learnings from each dry run. That gives us both a clean **restore** point and a way
   to **improve the base over time**.
 
-### Per-run throwaway branch: `demo/day4-<date>`
+### Per-run throwaway branches: TWO streams
+
+**Updated 2026-07-20.** A Day-4 run cuts **two independent throwaway branches** off `main`, one per demo
+stream, so they cannot contaminate each other and each resets on its own:
+
+```
+main                                    (living base - NEVER touched)
+|-- demo/day4-<date>-eightball          unattended stream (Docker sbx)
+|   `-- sandbox-<name>                  sbx clone-mode returns commits here; NEVER merged -
+|                                       switch to this branch to SHOW the work landed
+`-- demo/day4-<date>-plant              supervised stream (the decomposed epic)
+    `-- demo/day4-<date>-plant-<slice>  git worktree branch for a parallel ticket,
+                                        merged back = the consolidation beat
+```
+
+Parallel tickets that touch the same files run in a **git worktree** (`git worktree add ../<dir> -b <branch>`),
+not a container - match the isolation weight to the risk: a container for unattended work, a worktree for
+supervised parallel work.
+
+### Legacy single-branch form: `demo/day4-<date>`
 - Cut fresh from `main` for each run (precedent: the existing `demo/7_14_run`).
 - The agent and the presenter (HITL) experiment freely here.
 - **Deleted after each run.** To restore, re-cut / hard-reset from `main`.
