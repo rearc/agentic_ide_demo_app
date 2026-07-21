@@ -119,7 +119,7 @@ That last distinction is the whole cost story of adding a card: static is cheape
 - **[backend/app/models/card.py](../backend/app/models/card.py)** — the `Card` model. Point out `config` and `layout` are **JSON columns** (flexible per-card settings and grid position), and `to_dict()` is exactly what the API returns.
 - **[backend/app/models/todo.py](../backend/app/models/todo.py)** — the `Todo` model, with a foreign key to `cards` (`ON DELETE CASCADE`) — deleting the todo card removes its items.
 - **[backend/migrations/versions/](../backend/migrations/versions/)** — the schema's history as **Alembic migrations**: initial cards table → add `layout` column → add todos table. Schema changes go through here, never `create_all()`.
-- **[backend/seed.py](../backend/seed.py)** — inserts any of the starting five cards that are missing. Additive and safe to re-run: cards, todos and layout changes are preserved (ADR-017). ⚠️ `python seed.py --reset` is the destructive path — it wipes the `cards` and `todos` tables first, so anything added at runtime is lost.
+- **[backend/seed.py](../backend/seed.py)** — inserts any of the starting cards that are missing. Additive and safe to re-run: cards, todos and layout changes are preserved (ADR-017). ⚠️ `python seed.py --reset` is the destructive path — it wipes the `cards` and `todos` tables first, so anything added at runtime is lost.
 
 ---
 
